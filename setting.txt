@@ -7,6 +7,8 @@ pip install -r requirements.txt
 pip install Pillow
 pip install pytesseract gradio Pillow
 
+# 추가 설치
+pip install streamlit pytesseract pillow
 
 # 실행
 python app.py
