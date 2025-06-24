@@ -25,13 +25,13 @@ def detect_speech_bubbles_and_ocr(pil_image):
 
     annotated_img = image.copy()
     all_texts = []
-    bubble_crops = []  # 🟢 크롭된 말풍선 이미지를 저장할 리스트
+    bubble_crops = []  # 크롭된 말풍선 이미지를 저장할 리스트
 
     for cnt in contours:
         x, y, w, h = cv2.boundingRect(cnt)
         if w > 50 and h > 30:  # 너무 작은 말풍선은 무시
             bubble_crop = image[y:y + h, x:x + w]
-            bubble_crops.append(bubble_crop)  # 🟢 크롭 이미지 리스트에 추가
+            bubble_crops.append(bubble_crop)  # 크롭 이미지 리스트에 추가
             text = reader.readtext(bubble_crop, detail=0)
             all_texts.append({
                 "text": text,
@@ -39,7 +39,7 @@ def detect_speech_bubbles_and_ocr(pil_image):
             })
             cv2.rectangle(annotated_img, (x, y), (x + w, y + h), (255, 0, 0), 2)
 
-    return annotated_img, all_texts, bubble_crops  # 🟢 크롭 이미지도 반환
+    return annotated_img, all_texts, bubble_crops  # 크롭 이미지도 반환
 
 # 업로드 UI
 uploaded_file = st.file_uploader("웹툰 이미지를 업로드하세요", type=["png", "jpg", "jpeg"])
@@ -49,14 +49,14 @@ if uploaded_file:
     st.image(image, caption="업로드된 원본 이미지", use_column_width=True)
 
     with st.spinner("말풍선 감지 중..."):
-        annotated, texts, bubble_crops = detect_speech_bubbles_and_ocr(image)  # 🟢 크롭 이미지도 받음
+        annotated, texts, bubble_crops = detect_speech_bubbles_and_ocr(image)  # 크롭 이미지도 받음
 
     st.markdown("### 📍 감지된 말풍선 (박스 표시)")
     st.image(annotated, channels="RGB", use_column_width=True)
 
     st.markdown("### 🖼️ 감지된 말풍선 개별 이미지")
     if bubble_crops:
-        # 🟢 크롭된 이미지를 한 줄에 4개씩 썸네일로 보여주기
+        # 크롭된 이미지를 한 줄에 4개씩 썸네일로 보여주기
         cols = st.columns(4)
         for i, crop in enumerate(bubble_crops):
             with cols[i % 4]:
