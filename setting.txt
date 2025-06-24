@@ -6,11 +6,12 @@ source venv/bin/activate  # (윈도우: venv\Scripts\activate)
 pip install -r requirements.txt
 pip install Pillow
 pip install pytesseract gradio Pillow
-
-# 추가 설치
 pip install streamlit pytesseract pillow
 # easy ocr 설치
 pip install easyocr streamlit Pillow
+
+# 추가 설치
+pip install streamlit sqlalchemy pymysql
 
 .\venv\Scripts\python.exe -m pip install selenium
 
@@ -21,3 +22,4 @@ python app.py
 streamlit run streamlit_webtoon_ocr.py
 streamlit run ui_test2.py
 streamlit run main.py
+streamlit run db_test.py

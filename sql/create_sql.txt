@@ -1,0 +1,83 @@
+-- create database ocrProject;
+-- show databases;
+-- use ocrProject;
+
+-- drop table webtoon;
+-- drop table webtoon_group;
+-- drop table episode;
+-- drop table cut_image;
+-- drop table dialogue;
+-- drop table speaker;
+
+
+CREATE TABLE webtoon (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    group_id INT,
+    title VARCHAR(255),
+    company VARCHAR(100),
+    language VARCHAR(10),  -- 'kr', 'en' 등
+    genre INT COMMENT '장르 코드: 0=액션, 1=로맨스, 2=스릴러, 3=무협',
+    url TEXT
+);
+
+
+CREATE TABLE webtoon_group (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    group_name VARCHAR(255)  -- 예: '화산귀환 / Return of the Mount Hua Sect'
+);
+
+
+CREATE TABLE episode (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    webtoon_id INT,
+    episode_number INT,
+    lang VARCHAR(10), -- 'KR' or 'EN'
+    url TEXT,
+    jpg_url TEXT
+);
+
+CREATE TABLE cut_image (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    webtoon_id INT,         -- 웹툰 ID
+    episode_id INT,         -- 회차 ID
+    cut_number INT,         -- 컷 순서
+    image_path TEXT,        -- 저장된 이미지 경로
+    height_px INT           -- 이미지 높이 (px 단위)
+);
+
+CREATE TABLE dialogue (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    cut_image_id INT,
+    content TEXT,
+    type VARCHAR(50),
+    sequence INT,
+    speaker_id INT  -- speaker.id를 참조
+);
+
+CREATE TABLE speaker (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    webtoon_id INT,              -- 어떤 웹툰의 등장인물인지
+    name VARCHAR(255) NOT NULL   -- 등장인물 이름
+);
+
+INSERT INTO webtoon_group (group_name)
+VALUES 
+('화산귀환 / Return of the Mount Hua Sect'),
+('유미의 세포들');
+
+INSERT INTO webtoon (group_id, title, company, language, genre, url)
+VALUES 
+(1, '화산귀환', 'naver', 'kr', 3, 'https://comic.naver.com/webtoon/list?titleId=769209'),
+(1, 'Return of the Mount Hua Sect', 'naver', 'en', 3, 'https://webtoon.naver.com/en/hwasan/episode1'),
+(2, '유미의 세포들', 'naver', 'kr', 1, 'https://comic.naver.com/webtoon/list?titleId=651673');
+
+INSERT INTO episode (webtoon_id, episode_number, lang, url, jpg_url)
+VALUES 
+-- 화산귀환 1화 (KR/EN)
+(1, 1, 'kr', 'https://webtoon.naver.com/kr/hwasan/episode1','https://image-comic.pstatic.net/webtoon/769209/1/20220712144919_d6b1ac55df98a2583c89c89188cb7612_IMAG01_1.jpg'),
+(2, 1, 'en', 'https://webtoon.naver.com/en/hwasan/episode1', null),
+-- 유미의 세포들 1화 (KR)
+(3, 1, 'kr', 'https://comic.naver.com/webtoon/detail?titleId=651673&no=2&week=finish','https://image-comic.pstatic.net/webtoon/651673/2/20150331143423_d2726553fabcc4f38a7158815648cd22_IMAG01_1.jpg');
+
+
+select * from webtoon;
