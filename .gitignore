@@ -1,5 +1,6 @@
 # Ignore specific database file
-db/database.py
+db/
+database.py
 
 # Ignore entire image directory
 image/
