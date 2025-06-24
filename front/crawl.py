@@ -1,6 +1,5 @@
 import streamlit as st
 from function.crawler import capture_webtoon_image
-from function.ocr import extract_text_from_image
 from PIL import Image
 import os
 
@@ -8,19 +7,25 @@ def show():
     st.header("🕸 웹툰 크롤링 + OCR 분석")
     url = st.text_input("웹툰 URL을 입력하세요", placeholder="https://webtoon.example.com/episode/123")
 
-    if st.button("크롤링 및 텍스트 추출"):
+    if st.button("크롤링 및 이미지 저장"):
         if url:
             st.info("🔄 웹툰 페이지를 크롤링 중입니다...")
-            image_path = capture_webtoon_image(url)
+            image_paths = capture_webtoon_image(url)
 
-            if os.path.exists(image_path):
+            if image_paths:
                 st.success("✅ 이미지 캡처 완료!")
-                st.image(Image.open(image_path), caption="캡처된 웹툰 이미지", use_column_width=True)
+                st.write("👇 아래에서 이미지 파일을 다운로드할 수 있습니다.")
 
-                st.info("🧠 OCR 인식 중...")
-                text_result = extract_text_from_image(image_path)
-                st.subheader("📋 인식된 텍스트")
-                st.text(text_result)
+                for path in image_paths:
+                    if os.path.exists(path):
+                        with open(path, "rb") as file:
+                            btn_label = f"💾 {os.path.basename(path)} 다운로드"
+                            st.download_button(
+                                label=btn_label,
+                                data=file,
+                                file_name=os.path.basename(path),
+                                mime="image/png"
+                            )
             else:
                 st.error("이미지 캡처에 실패했습니다.")
         else:
