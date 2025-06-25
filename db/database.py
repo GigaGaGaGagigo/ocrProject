@@ -2,12 +2,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 # DB 연결 정보
-DB_USER = 'your_user'
-DB_PASSWORD = 'your_password'
+DB_USER = 'root'
+DB_PASSWORD = 'ejs!dnf2'
 DB_HOST = 'localhost'
 DB_PORT = '3306'
-DB_NAME = 'your_db_name'
-
+DB_NAME = 'ocrproject'
 
 # SQLAlchemy용 URL 구성
 DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"

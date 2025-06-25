@@ -1,51 +1,40 @@
 import streamlit as st
 from front import home, crawl, mu
 
-st.set_page_config(
-    initial_sidebar_state="collapsed",
-    page_icon="📘",
-    page_title="웹툰 OCR 학습기기",
-    layout="centered",)
-
-
-# ...existing code...
-
-#with st.sidebar:
-#    st.markdown("<div style='text-align: center;'><a href='https://www.naver.com' target='_blank'>버튼</a></div>", unsafe_allow_html=True)
-#    st.markdown("<div style='text-align: center;'><a href='http://localhost:8501/' target='_blank'>홈</a></div>", unsafe_allow_html=True)
-#    st.markdown("<div style='text-align: center;'><a href='http://localhost:8501/' target='_blank'>크롤링</a></div>", unsafe_allow_html=True)
-
-# ...existing code...
+st.set_page_config(page_title="웹툰 OCR 학습기", layout="centered")
 
 st.title("📘 웹툰 기반 AI 언어 학습")
+
+
 with st.sidebar:
     # 사이드바 헤더 이미지 추가
-    st.image("https://cdn.pixabay.com/photo/2024/02/17/15/59/plum-blossoms-8579641_1280.jpg", use_column_width=True)
-   
-    # 메뉴 제목을 스타일링
-    st.markdown("<h2 style='text-align: center; color: blue;'>📋 메뉴</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center;'>웹툰 기반 AI 언어 학습을 위한 앱입니다.</p>", unsafe_allow_html=True)
+    st.image("image/image.png", use_column_width=True)
+    #st.image("https://cdn.pixabay.com/photo/2024/02/17/15/59/plum-blossoms-8579641_1280.jpg", use_column_width=True)
+
     
+    col1, col2 = st.columns(2) 
+    with col1:
+        st.button("홈", key="home_button")
+        st.button("크롤링", key="crawl_button")
+    with col2:
+        st.button("공부", key="study_button")
+        st.button("마이", key="my_button")
+        
     # 메뉴 선택 버튼
     st.markdown("<h3 style='text-align: center;'>메뉴 선택</h3>", unsafe_allow_html=True)
     st.write("홈 페이지로 이동합니다.")
-    st.button("🏠 홈", key="home_button")
+    #st.button("🏠 홈", key="home_button")
 
     st.write("크롤링 페이지로 이동합니다.")
-    st.button("\n📄 크롤링", key="crawl_button")# 버튼을 옆으로하고싶은데 행으로?
+    #st.button("\n📄 크롤링", key="crawl_button")
 
     st.write("공부 페이지로 이동합니다.")
-    st.button("📄 공부", key="study_button")
+    #st.button("📄 공부", key="study_button")
 
     st.write("마이 페이지로 이동합니다.")
-    st.button("📄 마이", key="my_button")
+   # st.button("📄 마이", key="my_button")
 
-    # 추가 메뉴 항목
-    st.markdown("<p style='text-align: center;'>- 크롤링</p>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center;'>- OCR</p>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center;'>- 학습</p>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center;'>- 모델</p>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center;'>- 설정</p>", unsafe_allow_html=True)
+   
     
     # 구분선 추가
     st.markdown("---")
@@ -71,48 +60,13 @@ with st.sidebar:
     user_input = st.text_input("이름을 입력하세요:", "")
     if user_input:
         st.write(f"안녕하세요, {user_input}님!")
-
-# 페이지 선택
-page = st.sidebar.selectbox("📌 페이지 선택", ["홈", "크롤링", "무협"])
-
-if page == "홈":
-    home.show()
-elif page == "크롤링":
-    crawl.show()
-elif page == "무협":
-    mu.show()
-
-st.title("📘 웹툰 기반 AI 언어 학습")
-with st.sidebar:
     
-    
-    st.markdown("# 📋메뉴")
-    st.markdown("웹툰 기반 AI 언어 학습을 위한 앱입니다.")
-    st.markdown("### 메뉴 선택")
-    st.button("- 홈")
-    st.button("- 크롤링")
-    st.markdown("- 크롤링")
-    st.markdown("- OCR")
-    st.markdown("- 학습")
-    st.markdown("- 모델")
-    st.markdown("- 설정")
-    st.markdown("---")
-    st.markdown("### 도움말")
-    st.markdown("이 앱은 웹툰 기반 AI 언어 학습을 위한 앱입니다.")
-    st.markdown("### 개발자")
-    st.markdown("개발자: 홍길동")
-    st.markdown("이 앱은 Streamlit을 사용하여 개발되었습니다.")
-    st.markdown("### GitHub")
-    st.link_button("버튼", "https://www.naver.com")  # 버튼을 클릭하면 네이버로 이동합니다
-    st.link_button("홈", " http://localhost:8501/")
-    st.link_button("크롤링", "http://localhost:8501/")
+    page = st.selectbox("📌 페이지 선택", ["크롤링", "홈", "무협"])
 
-page = st.sidebar.selectbox("📌 페이지 선택", ["홈", "크롤링", "무협"])
 
-#st.button("버튼")
-if page == "홈":
-    home.show()
-elif page == "크롤링":
+if page == "크롤링":
     crawl.show()
+elif page == "홈":
+    home.show()
 elif page == "무협":
     mu.show()

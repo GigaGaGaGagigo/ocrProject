@@ -11,3 +11,25 @@ class Webtoon(Base):
     language = Column(String(10))  # ex: 'kr', 'en'
     genre = Column(Integer)        # 0=로맨스, 1=액션, ...
     url = Column(Text)
+
+
+class Episode(Base):
+    __tablename__ = 'episode'
+
+    id = Column(Integer, primary_key=True, index=True)
+    webtoon_id = Column(Integer)
+    episode_number = Column(Integer)
+    lang = Column(String(10))     # 'kr', 'en'
+    url = Column(Text)            # 에피소드 웹 URL
+    jpg_url = Column(Text)        # 이미지 시드 URL, 예: https://.../_IMAG01_1.jpg
+
+
+class CutImage(Base):
+    __tablename__ = 'cut_image'
+
+    id = Column(Integer, primary_key=True, index=True)
+    webtoon_id = Column(Integer)
+    episode_id = Column(Integer)
+    cut_number = Column(Integer)
+    image_path = Column(String(500))
+    height_px = Column(Integer)  # px 단위, 추후 계산해서 넣을 수 있음
