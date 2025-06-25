@@ -1,77 +1,93 @@
 import streamlit as st
 from front import home, crawl, mu
 
-st.set_page_config(page_title="웹툰 OCR 학습기", layout="centered")
+# 1️⃣ 필수: 맨 위에서 page 설정
+st.set_page_config(page_title="COMIC STUDY 🍀", layout="wide")
 
-st.title("📘 웹툰 기반 AI 언어 학습")
+# 2️⃣ 초록 귀여운 테마 CSS
+st.markdown("""
+    <style>
+    /* 배경색 */
+    body {
+        background-color: #f0fff4;
+    }
 
+    .stApp {
+        background-color: #f0fff4;
+        font-family: 'Comic Sans MS', 'Noto Sans KR', sans-serif;
+        color: #2f4f4f;
+        animation: fadeIn 1s ease-in;
+    }
 
+    /* 타이틀 애니메이션 */
+    h1 {
+        animation: bounceIn 1s ease-out;
+        color: #2e8b57;
+    }
+
+    /* 버튼 꾸미기 */
+    div.stButton > button {
+        background: linear-gradient(45deg, #98fb98, #2e8b57);
+        color: white;
+        font-weight: bold;
+        padding: 10px 24px;
+        border: none;
+        border-radius: 20px;
+        box-shadow: 2px 2px 10px #90ee90;
+        transition: 0.3s ease;
+    }
+
+    div.stButton > button:hover {
+        background: linear-gradient(45deg, #2e8b57, #006400);
+        transform: scale(1.05);
+    }
+
+    /* 애니메이션 키프레임 */
+    @keyframes fadeIn {
+        0% { opacity: 0; transform: translateY(20px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes bounceIn {
+        0%, 20%, 40%, 60%, 80%, 100% {
+            transition-timing-function: cubic-bezier(0.215, 0.610, 0.355, 1.000);
+        }
+        0% { transform: scale(0.3); opacity: 0; }
+        20% { transform: scale(1.1); }
+        40% { transform: scale(0.9); }
+        60% { transform: scale(1.03); opacity: 1; }
+        80% { transform: scale(0.97); }
+        100% { transform: scale(1); }
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# 3️⃣ 상단 타이틀
+st.title("🌿 Comic Study - 초록 에디션 💚")
+
+# 4️⃣ 사이드바 메뉴
 with st.sidebar:
-    # 사이드바 헤더 이미지 추가
     st.image("image/image.png", use_column_width=True)
-    #st.image("https://cdn.pixabay.com/photo/2024/02/17/15/59/plum-blossoms-8579641_1280.jpg", use_column_width=True)
-
-    
-    col1, col2 = st.columns(2) 
+    col1, col2 = st.columns(2)
     with col1:
-        st.button("홈", key="home_button")
-        st.button("크롤링", key="crawl_button")
+        st.button("🏠 홈", key="home_button")
+        st.button("🖼️ 크롤링", key="crawl_button")
     with col2:
-        st.button("공부", key="study_button")
-        st.button("마이", key="my_button")
-        
-    # 메뉴 선택 버튼
-    st.markdown("<h3 style='text-align: center;'>메뉴 선택</h3>", unsafe_allow_html=True)
-    st.write("홈 페이지로 이동합니다.")
-    #st.button("🏠 홈", key="home_button")
+        st.button("📚 공부", key="study_button")
+        st.button("🧑‍🎓 마이", key="my_button")
 
-    st.write("크롤링 페이지로 이동합니다.")
-    #st.button("\n📄 크롤링", key="crawl_button")
-
-    st.write("공부 페이지로 이동합니다.")
-    #st.button("📄 공부", key="study_button")
-
-    st.write("마이 페이지로 이동합니다.")
-   # st.button("📄 마이", key="my_button")
-
-   
-    
-    # 구분선 추가
     st.markdown("---")
-    
-    # 도움말 섹션
-    st.markdown("<h3 style='text-align: center;'>도움말</h3>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center;'>이 앱은 웹툰 기반 AI 언어 학습을 위한 앱입니다.</p>", unsafe_allow_html=True)
-    
-    # 개발자 정보
-    st.markdown("<h3 style='text-align: center;'>개발자</h3>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center;'>개발자: 홍길동</p>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center;'>이 앱은 Streamlit을 사용하여 개발되었습니다.</p>", unsafe_allow_html=True)
-    
-    # GitHub 링크
-    st.markdown("<h3 style='text-align: center;'>GitHub</h3>", unsafe_allow_html=True)
-    st.markdown("<div style='text-align: center;'><a href='https://www.naver.com' target='_blank'>네이버로 이동</a></div>", unsafe_allow_html=True)
-    st.markdown("<div style='text-align: center;'><a href='http://localhost:8501/' target='_blank'>홈</a></div>", unsafe_allow_html=True)
-    st.markdown("<div style='text-align: center;'><a href='http://localhost:8501/' target='_blank'>크롤링</a></div>", unsafe_allow_html=True)
-    
-    # 사용자 입력 추가
-    st.markdown("---")
-    st.markdown("<h3 style='text-align: center;'>사용자 입력</h3>", unsafe_allow_html=True)
-    user_input = st.text_input("이름을 입력하세요:", "")
-    if user_input:
-        st.write(f"안녕하세요, {user_input}님!")
-    
-    page = st.selectbox("📌 페이지 선택", ["홈", "크롤링", "무협"])
+    page = st.selectbox("🌱 페이지 선택", ["홈", "크롤링", "무협"])
 
-
+# 5️⃣ 라우팅 처리
 if page == "홈":
     home.show()
 elif page == "크롤링":
     crawl.show()
 elif page == "무협":
     mu.show()
-st.button("홈페이지")
-st.button("크롤링 페이지")
-st.button("무협 페이지")
-
-
+    st.markdown("---")
+    st.markdown("🍀 <h3 style='text-align: center;'>사용자 입력</h3>", unsafe_allow_html=True)
+    user_input = st.text_input("📝 이름을 입력하세요:", "")
+    if user_input:
+        st.success(f"🎉 안녕하세요, {user_input}님!")

@@ -6,70 +6,34 @@ import os
 
 def show():
     
-    st.title("📄 컨테이너로 나눈 페이지 예시")
+    st.title("📄 무협")
 
-    # ✅ 상단 버튼 (뒤로가기, 의견 추가)
-    with st.container():
-        col1, col2, col3 = st.columns([1, 8, 1])
-
-        with col1:
-            if st.button("← 뒤로가기"):
-                st.write("뒤로가기 실행")
-
-        with col3:
-            if st.button("의견추가"):
-                st.write("의견 추가하기")
-
+    
     # ✅ 본문 이미지 비교 영역
     with st.container():
-        st.subheader("🔸 링크를 넣어주세요")
+        st.subheader("🔸 링크를 넣어주세요"), st.subheader("링크를 넣어주세요")
 
-        undo_col1, img_col1, img_col2, next_col1 = st.columns(4)
+        undo_col1, img_col1, img_col2, next_col1 = st.columns([0.1, 1, 1, 0.1])
 
         with undo_col1:
-            if st.button("↩️ 되돌리기"):
+            if st.button("↩️ "):
                 st.write("되돌리기 클릭됨")
-            st.markdown("""
-                <style>
-                .custom-button {
-                    background-color: #4CAF50;
-                    color: white;
-                    padding: 20px 40px;
-                    font-size: 20px;
-                    border: none;
-                    border-radius: 10px;
-                }
-                </style>
-                <button class="custom-button">🔙</button>
-            """, unsafe_allow_html=True)
+          
 
         with img_col1:
-            st.image("image/image.png", caption="이미지1", use_column_width=True)
+            st.image("20250519192639_3b58aab64215b9c094c0e205a404a6a7_IMAG01_2.jpg", caption="영어", use_column_width=True)
 
         with img_col2:
-            st.image("image/image.png", caption="이미지2", use_column_width=True)
+            st.image("20250519192639_3b58aab64215b9c094c0e205a404a6a7_IMAG01_2.jpg", caption="한글", use_column_width=True)
 
         with next_col1:
-            if st.button("➡️ 다음"):
+            if st.button("➡️"):
                 st.write("다음 클릭됨")
-            st.markdown("""
-                <style>
-                .custom-button {
-                    background-color: #4CAF50;
-                    color: white;
-                    padding: 20px 40px;
-                    font-size: 20px;
-                    border: none;
-                    border-radius: 10px;
-                }
-                </style>
-                <button class="custom-button">🔜</button>
-            """, unsafe_allow_html=True)
-
+        
     # ✅ 하단 선택 영역
     with st.container():
         st.markdown("---")
-        st.subheader("틀린그림찾기:")
+        st.subheader("퀴즈:")
         selected = st.radio("정답을 선택하세요:", ["다른게 있다", "다른게 없다", "모르겠다"])
         st.write(f"선택된 옵션: {selected}")
 
