@@ -7,6 +7,7 @@ pip install -r requirements.txt
 pip install Pillow
 pip install pytesseract gradio Pillow
 pip install streamlit pytesseract pillow
+
 # easy ocr 설치
 pip install easyocr streamlit Pillow
 
@@ -23,3 +24,4 @@ streamlit run streamlit_webtoon_ocr.py
 streamlit run ui_test2.py
 streamlit run main.py
 streamlit run db_test.py
+streamlit run speech_bubble_extractor.py 
