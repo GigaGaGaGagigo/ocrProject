@@ -11,9 +11,24 @@ def show():
     
     # ✅ 본문 이미지 비교 영역
     with st.container():
-        st.subheader("🔸 링크를 넣어주세요"), st.subheader("링크를 넣어주세요")
+        st.subheader("🔸 영어링크를 넣어주세요")
+        link_input = st.text_input("영어웹툰 링크", placeholder="https://example.com/webtoon..."
+                                   ,key="ENwebtoon_link_input")
 
-        undo_col1, img_col1, img_col2, next_col1 = st.columns([0.1, 1, 1, 0.1])
+        if link_input:
+            st.info(f"입력된 링크: {link_input}")
+            # 필요 시 link_input을 기반으로 OCR 또는 이미지 처리 가능
+        # ✅ 링크 입력 영역
+    with st.container():
+        st.subheader("🔸 한글 링크를 입력해주세요")
+        link_input = st.text_input("웹툰 링크", placeholder="https://example.com/webtoon..."
+                                   ,key="webtoon_link_input")
+
+        if link_input:
+            st.info(f"입력된 링크: {link_input}")
+            # 필요 시 link_input을 기반으로 OCR 또는 이미지 처리 가능
+
+        undo_col1, img_col1, img_col2, next_col1 = st.columns([0.2, 1.5, 1.5, 0.1])
 
         with undo_col1:
             if st.button("↩️ "):
@@ -33,12 +48,6 @@ def show():
     # ✅ 하단 선택 영역
     with st.container():
         st.markdown("---")
-        st.subheader("퀴즈:")
-        selected = st.radio("정답을 선택하세요:", ["다른게 있다", "다른게 없다", "모르겠다"])
+        st.subheader("다음중 웹툰 속 대사로 나오지 않은 단어는?")
+        selected = st.radio("정답을 선택하세요:", ["HI", "HELLO", "BYE"])
         st.write(f"선택된 옵션: {selected}")
-
-    # ✅ 페이지 이동
-    with st.container():
-        st.page_link("main2.py", label="➡ 다음 페이지", icon="➡")
-        if st.button("다음으로"):
-            st.success("다음 단계로 이동합니다.")

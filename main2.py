@@ -1,19 +1,21 @@
 import streamlit as st
-from front import home, crawl, mu
+from front import home, crawl, mu, my
 
 # 1️⃣ 필수: 맨 위에서 page 설정
 st.set_page_config(page_title="COMIC STUDY 🍀", layout="wide")
+
 
 # 2️⃣ 초록 귀여운 테마 CSS
 st.markdown("""
     <style>
     /* 배경색 */
     body {
-        background-color: #f0fff4;
+        background-color: #1e1e1e;
+
     }
 
     .stApp {
-        background-color: #f0fff4;
+        background-color: #1e1e1e;
         font-family: 'Comic Sans MS', 'Noto Sans KR', sans-serif;
         color: #2f4f4f;
         animation: fadeIn 1s ease-in;
@@ -63,21 +65,21 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # 3️⃣ 상단 타이틀
-st.title("🌿 Comic Study - 초록 에디션 💚")
+st.title("🌿 Comic Study💚")
 
 # 4️⃣ 사이드바 메뉴
 with st.sidebar:
-    st.image("image/image.png", use_column_width=True)
+    st.image("스크린샷 2025-06-26 오전 10.24.19.png", use_column_width=True)
     col1, col2 = st.columns(2)
     with col1:
         st.button("🏠 홈", key="home_button")
-        st.button("🖼️ 크롤링", key="crawl_button")
+        st.button("🖼️ 액션", key="crawl_button")
     with col2:
-        st.button("📚 공부", key="study_button")
+        st.button("📚 무협", key="study_button")
         st.button("🧑‍🎓 마이", key="my_button")
 
     st.markdown("---")
-    page = st.selectbox("🌱 페이지 선택", ["홈", "크롤링", "무협"])
+    page = st.selectbox("🌱 페이지 선택", ["홈", "크롤링", "무협", "마이페이지"])
 
 # 5️⃣ 라우팅 처리
 if page == "홈":
@@ -86,8 +88,6 @@ elif page == "크롤링":
     crawl.show()
 elif page == "무협":
     mu.show()
-    st.markdown("---")
-    st.markdown("🍀 <h3 style='text-align: center;'>사용자 입력</h3>", unsafe_allow_html=True)
-    user_input = st.text_input("📝 이름을 입력하세요:", "")
-    if user_input:
-        st.success(f"🎉 안녕하세요, {user_input}님!")
+elif page == "마이페이지":
+    my.show()
+
