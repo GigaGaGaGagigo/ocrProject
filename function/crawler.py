@@ -55,3 +55,17 @@ def capture_webtoon_image(url, base_name="webtoon_capture", chunk_height=3000, c
         saved_paths.append(save_path)
 
     return saved_paths  # 여러 개의 저장된 경로 리스트 반환
+
+def jpg_url_update(url: str, num: int) -> str:
+    # 1. 마지막 5글자 제거 (예: '1.jpg')
+    url = url[:-5]
+
+    # 2. 뒤에서부터 '_'가 나올 때까지 한 글자씩 제거
+    while url and url[-1] != '_':
+        url = url[:-1]
+
+    # 3. `_`가 포함되어 있다면 num을 붙이고 `.jpg` 확장자 추가
+    if url.endswith('_'):
+        return f"{url}{num}.jpg"
+    else:
+        raise ValueError("유효한 base URL 형식이 아닙니다.")

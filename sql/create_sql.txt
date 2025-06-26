@@ -1,6 +1,6 @@
 -- create database ocrProject;
 -- show databases;
--- use ocrProject;
+use ocrProject;
 
 -- drop table webtoon;
 -- drop table webtoon_group;
@@ -17,6 +17,7 @@ CREATE TABLE webtoon (
     company VARCHAR(100),
     language VARCHAR(10),  -- 'kr', 'en' 등
     genre INT COMMENT '장르 코드: 0=액션, 1=로맨스, 2=스릴러, 3=무협',
+    cut_size INT DEFAULT 0,
     url TEXT
 );
 
@@ -38,7 +39,6 @@ CREATE TABLE episode (
 
 CREATE TABLE cut_image (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    webtoon_id INT,         -- 웹툰 ID
     episode_id INT,         -- 회차 ID
     cut_number INT,         -- 컷 순서
     image_path TEXT,        -- 저장된 이미지 경로

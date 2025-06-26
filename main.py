@@ -1,5 +1,5 @@
 import streamlit as st
-from front import home, crawl, mu
+from front import home, mu, url_insert
 
 st.set_page_config(page_title="웹툰 OCR 학습기", layout="centered")
 
@@ -61,11 +61,11 @@ with st.sidebar:
     if user_input:
         st.write(f"안녕하세요, {user_input}님!")
     
-    page = st.selectbox("📌 페이지 선택", ["크롤링", "홈", "무협"])
+    page = st.selectbox("📌 페이지 선택", ["URL 등록", "홈", "무협"])
 
 
-if page == "크롤링":
-    crawl.show()
+if page == "URL 등록":
+    url_insert.show()
 elif page == "홈":
     home.show()
 elif page == "무협":

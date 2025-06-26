@@ -10,8 +10,13 @@ class Webtoon(Base):
     company = Column(String(100))
     language = Column(String(10))  # ex: 'kr', 'en'
     genre = Column(Integer)        # 0=로맨스, 1=액션, ...
+    cut_size = Column(Integer, default=0)
     url = Column(Text)
 
+class WebtoonGroup(Base):
+    __tablename__ = "webtoon_group"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    group_name = Column(String(255))
 
 class Episode(Base):
     __tablename__ = 'episode'
