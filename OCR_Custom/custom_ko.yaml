@@ -1,0 +1,22 @@
+train_data: 'C:\git-practice-text\OCR\ocrProject\OCR_Custom\train_data'
+valid_data: 'C:\git-practice-text\OCR\ocrProject\OCR_Custom\valid_data'
+data_filtering_off: True
+
+language_list:
+  - 'ko'
+
+character_list: 'C:\git-practice-text\OCR\ocrProject\OCR_Custom\chars.txt'
+
+imgH: 64
+imgW: 200
+batch_size: 16
+num_workers: 2
+valInterval: 500
+num_iter: 10000
+FT: True
+
+saved_model: 'C:\git-practice-text\OCR\ocrProject\OCR_Custom\saved_models\custom_model.pth'
+
+user_network_params:
+  recog_network: 'model_01'
+  user_network_directory: 'C:\git-practice-text\OCR\ocrProject\OCR_Custom\model_1'
