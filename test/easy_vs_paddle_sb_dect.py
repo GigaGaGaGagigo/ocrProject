@@ -52,7 +52,7 @@ def merge_clusters(boxes, clusters):
     return final_result
 
 # === [1] 이미지 로딩 ===
-img_path = "yumi_31_cut1_en.JPEG" # 실제 사용 이미지로 입력
+img_path = "1.JPEG" # 실제 사용 이미지로 입력하세요
 pil_img = Image.open(img_path).convert("RGB")
 img_np = np.array(pil_img)
 

@@ -1,0 +1,483 @@
+import streamlit as st
+from front import home, crawl, mu
+
+# ✅ 첫 번째 명령어로 페이지 설정
+st.set_page_config(page_title="COMIC STUDY", layout="wide")
+
+# ✅ 전체 배경색, 텍스트, 버튼 스타일 커스터마이징
+st.markdown("""
+    <style>
+    /* 전체 배경색 */
+    body {
+        background-color:rgb(221, 14, 103);
+    }
+
+    /* 페이지 전체 글꼴 및 텍스트 색상 */
+    .stApp {
+        color: #333333;
+        font-family: 'Helvetica', sans-serif;
+    }
+
+    /* 버튼 스타일 */
+    div.stButton > button {
+        background-color: #4CAF50;
+        color: white;
+        padding: 0.5em 1em;
+        border-radius: 10px;
+        border: none;
+        font-size: 1em;
+        transition: 0.3s;
+    }
+
+    div.stButton > button:hover {
+        background-color: #45a049;
+    }
+
+    /* 선택 상자 (selectbox) 스타일 */
+    div[data-baseweb="select"] {
+        background-color: white;
+        border-radius: 10px;
+    }
+
+    /* 라디오 버튼 텍스트 */
+    label.css-1cpxqw2 {
+        color: #333;
+        font-weight: 500;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# ✅ 상단 타이틀
+st.title("📘💥 Comic Study")
+
+# ✅ 사이드바 구성
+with st.sidebar:
+    st.image("image/image.png", use_column_width=True)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.button("홈", key="home_button")
+        st.button("크롤링", key="crawl_button")
+    with col2:
+        st.button("공부", key="study_button")
+        st.button("마이", key="my_button")
+
+    st.markdown("---")
+    page = st.selectbox("   페이지 선택", ["홈", "크롤링", "무협"])
+
+# ✅ 페이지 선택 라우팅
+if page == "홈":
+    home.show()
+elif page == "크롤링":
+    crawl.show()
+elif page == "무협":
+    mu.show()
+    st.markdown("---")
+    st.markdown("<h3 style='text-align: center;'>사용자 입력</h3>", unsafe_allow_html=True)
+    user_input = st.text_input("이름을 입력하세요:", "")
+    if user_input:
+        st.success(f"안녕하세요, {user_input}님!")
+
+
+
+
+---------------------
+import streamlit as st
+from front import home, crawl, mu
+
+# 1️⃣ 필수: 맨 위에서 page 설정
+st.set_page_config(page_title="COMIC STUDY 🧸", layout="wide")
+
+# 2️⃣ 귀여운 테마 + 애니메이션 CSS 추가
+st.markdown("""
+    <style>
+    /* 배경색 */
+    body {
+        background-color: #fff0f5;
+    }
+
+    .stApp {
+        background-color: #fff0f5;
+        font-family: 'Comic Sans MS', 'Noto Sans KR', sans-serif;
+        color: #333;
+        animation: fadeIn 1s ease-in;
+    }
+
+    /* 타이틀 애니메이션 */
+    h1 {
+        animation: bounceIn 1s ease-out;
+        color: #ff69b4;
+    }
+
+    /* 버튼 꾸미기 */
+    div.stButton > button {
+        background: linear-gradient(45deg, #ffb6c1, #ff69b4);
+        color: white;
+        font-weight: bold;
+        padding: 10px 24px;
+        border: none;
+        border-radius: 20px;
+        box-shadow: 2px 2px 10px #ffc0cb;
+        transition: 0.3s ease;
+    }
+
+    div.stButton > button:hover {
+        background: linear-gradient(45deg, #ff69b4, #ff1493);
+        transform: scale(1.05);
+    }
+
+    /* 애니메이션 키프레임 */
+    @keyframes fadeIn {
+        0% { opacity: 0; transform: translateY(20px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes bounceIn {
+        0%, 20%, 40%, 60%, 80%, 100% {
+            transition-timing-function: cubic-bezier(0.215, 0.610, 0.355, 1.000);
+        }
+        0% { transform: scale(0.3); opacity: 0; }
+        20% { transform: scale(1.1); }
+        40% { transform: scale(0.9); }
+        60% { transform: scale(1.03); opacity: 1; }
+        80% { transform: scale(0.97); }
+        100% { transform: scale(1); }
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# 3️⃣ 상단 타이틀
+st.title("📘✨ Comic Study - 귀여운 에디션 💕")
+
+# 4️⃣ 사이드바 메뉴
+with st.sidebar:
+    st.image("image/image.png", use_column_width=True)
+    col1, col2 = st.columns(2)
+    with col1:
+        st.button("🏠 홈", key="home_button")
+        st.button("🖼️ 크롤링", key="crawl_button")
+    with col2:
+        st.button("📚 공부", key="study_button")
+        st.button("🧑‍🎓 마이", key="my_button")
+
+    st.markdown("---")
+    page = st.selectbox("🌈 페이지 선택", ["홈", "크롤링", "무협"])
+
+# 5️⃣ 라우팅 처리
+if page == "홈":
+    home.show()
+elif page == "크롤링":
+    crawl.show()
+elif page == "무협":
+    mu.show()
+    st.markdown("---")
+    st.markdown("🎀 <h3 style='text-align: center;'>사용자 입력</h3>", unsafe_allow_html=True)
+    user_input = st.text_input("📝 이름을 입력하세요:", "")
+    if user_input:
+        st.success(f"🎉 안녕하세요, {user_input}님!")
+
+
+
+--------------
+
+import streamlit as st
+from streamlit_lottie import st_lottie
+import requests
+
+
+# ✅ Lottie JSON 불러오기 함수
+def load_lottie_url(url: str):
+    r = requests.get(url)
+    if r.status_code != 200:
+        return None
+    return r.json()
+
+
+# ✅ 페이지 설정은 제일 위에서 한 번만!
+st.set_page_config(page_title="Cute Comic App", layout="wide")
+
+# ✅ 귀여운 Lottie 애니메이션 링크
+lottie_cute = load_lottie_url("https://assets1.lottiefiles.com/packages/lf20_w51pcehl.json")
+
+# ✅ 배경색 및 글자색 조정 (귀여운 테마)
+st.markdown("""
+    <style>
+    body {
+        background-color: #fff9f5;
+    }
+    .stApp {
+        background-color: #fff9f5;
+    }
+    h1, h2, h3, h4 {
+        color: #ff69b4;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+# ✅ 상단 타이틀
+st.title("🎀 귀여운 웹툰 OCR 앱 🎀")
+
+# ✅ Lottie 애니메이션 출력
+if lottie_cute:
+    st_lottie(lottie_cute, height=250, key="cute1")
+else:
+    st.error("귀여운 애니메이션을 불러오지 못했습니다. 인터넷 연결을 확인해주세요.")
+
+# ✅ 본문 섹션
+with st.container():
+    st.subheader("🔗 링크를 넣어주세요")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.image("image/image.png", caption="이미지 1", use_column_width=True)
+    with col2:
+        st.image("image/image.png", caption="이미지 2", use_column_width=True)
+
+# ✅ 선택지
+with st.container():
+    st.subheader("🧸 틀린 그림 찾기")
+    choice = st.radio("정답은?", ["다른 게 있다", "다른 게 없다", "모르겠다"])
+    st.success(f"당신의 선택: {choice}")
+
+# ✅ 하단 버튼
+with st.container():
+    if st.button("다음 단계로 ▶"):
+        st.balloons()
+        st.success("다음 단계로 이동 중입니다!")
+
+-----------------
+
+import streamlit as st
+from streamlit_lottie import st_lottie
+import requests
+
+# 기본 페이지 설정
+st.set_page_config(page_title="Comic Study", layout="wide")
+
+# 테마 상태 초기화
+if "theme" not in st.session_state:
+    st.session_state.theme = "light"
+
+# 🌗 다크모드 토글
+theme_toggle = st.toggle("🌗 다크모드", key="theme_toggle")
+if theme_toggle:
+    st.session_state.theme = "dark"
+else:
+    st.session_state.theme = "light"
+
+# 🎨 테마별 스타일 정의
+if st.session_state.theme == "dark":
+    bg_color = "#1e1e1e"
+    font_color = "#ffffff"
+    button_color = "#006400"
+    button_shadow = "#013220"
+else:
+    bg_color = "#f0fff4"
+    font_color = "#2f4f4f"
+    button_color = "#2e8b57"
+    button_shadow = "#90ee90"
+
+# ✅ CSS 삽입
+st.markdown(f"""
+    <style>
+    .stApp {{
+        background-color: {bg_color};
+        color: {font_color} !important;
+        font-family: 'Comic Sans MS', 'Noto Sans KR', sans-serif;
+        animation: fadeIn 1s ease-in;
+    }}
+    h1, h2, h3, h4, h5, h6, p, span, div {{
+        color: {font_color} !important;
+    }}
+    div.stButton > button {{
+        background: linear-gradient(45deg,rgb(117, 221, 140), {button_color});
+        color: white;
+        font-weight: bold;
+        padding: 10px 24px;
+        border: none;
+        border-radius: 20px;
+        box-shadow: 2px 2px 10px {button_shadow};
+        transition: 0.3s ease;
+    }}
+    div.stButton > button:hover {{
+        background: linear-gradient(45deg, {button_color}, #004d00);
+        transform: scale(1.05);
+    }}
+    @keyframes fadeIn {{
+        0% {{ opacity: 0; transform: translateY(20px); }}
+        100% {{ opacity: 1; transform: translateY(0); }}
+    }}
+    </style>
+""", unsafe_allow_html=True)
+
+# ✅ Lottie 애니메이션 불러오기 함수
+def load_lottie_url(url):
+    r = requests.get(url)
+    if r.status_code != 200:
+        return None
+    return r.json()
+
+lottie_url = "https://assets4.lottiefiles.com/packages/lf20_yd9y9y.json"
+lottie_animation = load_lottie_url(lottie_url)
+
+# 타이틀 + 애니메이션
+st.title("📘 Comic Study")
+if lottie_animation:
+    st_lottie(lottie_animation, height=200, key="cute_lottie")
+
+# 사이드바 메뉴
+with st.sidebar:
+    st.image("image/image.png", use_column_width=True)
+    page = st.radio("📚 메뉴 선택", ["홈", "크롤링", "무협"])
+
+# 페이지별 내용
+if page == "홈":
+    st.subheader("🏠 홈 페이지")
+    name = st.text_input("🧸 이름을 입력하세요:")
+    if name:
+        st.success(f"안녕하세요, {name}님!")
+
+elif page == "크롤링":
+    st.subheader("🔎 크롤링 페이지")
+    if st.button("크롤링 시작"):
+        st.info("크롤링을 시작합니다...")
+
+elif page == "무협":
+    st.subheader("⚔️ 무협 웹툰 분석")
+    user_input = st.text_input("📝 분석할 웹툰 이름 입력:")
+    if user_input:
+        st.write(f"'{user_input}'을(를) 분석합니다.")
+
+
+----------------------
+import streamlit as st
+
+# 1️⃣ 페이지 설정
+st.set_page_config(page_title="테마 커스터마이징", layout="wide")
+
+
+if "theme" not in st.session_state:
+    st.session_state.theme = "light"
+
+# 🌗 다크모드 토글
+theme_toggle = st.toggle("🌗 다크모드", key="theme_toggle")
+if theme_toggle:
+    st.session_state.theme = "dark"
+else:
+    st.session_state.theme = "light"
+# 2️⃣ 테마 프리셋 정의
+presets = {
+    "민트": {
+        "bg": "#b2f2bb", "text": "#2f4f4f", "title": "#2e8b57",
+        "btn_start": "#98fb98", "btn_end": "#2e8b57",
+        "hover_start": "#2e8b57", "hover_end": "#006400", "shadow": "#90ee90"
+    },
+    "딸기": {
+        "bg": "#ffe4e1", "text": "#8b0000", "title": "#ff1493",
+        "btn_start": "#ffb6c1", "btn_end": "#ff69b4",
+        "hover_start": "#ff69b4", "hover_end": "#c71585", "shadow": "#ffb6c1"
+    },
+    "초코": {
+        "bg": "#f5f5dc", "text": "#3e2723", "title": "#5d4037",
+        "btn_start": "#d7ccc8", "btn_end": "#8d6e63",
+        "hover_start": "#5d4037", "hover_end": "#3e2723", "shadow": "#a1887f"
+    },
+    "다크": {
+        "bg": "#1e1e1e", "text": "#ffffff", "title": "#98fb98",
+        "btn_start": "#2e8b57", "btn_end": "#004d00",
+        "hover_start": "#98fb98", "hover_end": "#2e8b57", "shadow": "#444"
+    },
+}
+
+# 3️⃣ 사용자 테마 선택
+with st.sidebar:
+    preset_name = st.selectbox("🎨 테마 프리셋 선택", list(presets.keys()))
+    st.markdown("---")
+    st.markdown("🎛️ 사용자 커스텀 테마")
+    bg = st.color_picker("배경색", presets[preset_name]["bg"])
+    text = st.color_picker("텍스트 색", presets[preset_name]["text"])
+    title = st.color_picker("타이틀 색", presets[preset_name]["title"])
+    btn_start = st.color_picker("버튼 시작색", presets[preset_name]["btn_start"])
+    btn_end = st.color_picker("버튼 끝색", presets[preset_name]["btn_end"])
+    hover_start = st.color_picker("버튼 hover 시작", presets[preset_name]["hover_start"])
+    hover_end = st.color_picker("버튼 hover 끝", presets[preset_name]["hover_end"])
+    shadow = st.color_picker("버튼 그림자", presets[preset_name]["shadow"])
+    # 사이드바 메뉴
+    page = st.radio("📚 메뉴 선택", ["홈", "크롤링", "무협"])
+# 4️⃣ CSS 삽입
+st.markdown(f"""
+    <style>
+    .stApp {{
+        background-color: {bg};
+        font-family: 'Comic Sans MS', 'Noto Sans KR', sans-serif;
+        color: {text};
+        animation: fadeIn 1s ease-in;
+    }}
+
+    section[data-testid="stSidebar"] {{
+        background-color: {bg};
+        border-radius: 15px;
+        box-shadow: 2px 2px 10px {shadow};
+    }}
+
+    h1 {{
+        animation: bounceIn 1s ease-out;
+        color: {title};
+    }}
+
+    div.stButton > button {{
+        background: linear-gradient(45deg, {btn_start}, {btn_end});
+        color: white;
+        font-weight: bold;
+        padding: 10px 24px;
+        border: none;
+        border-radius: 20px;
+        box-shadow: 2px 2px 10px {shadow};
+        transition: 0.3s ease;
+    }}
+
+    div.stButton > button:hover {{
+        background: linear-gradient(45deg, {hover_start}, {hover_end});
+        transform: scale(1.05);
+    }}
+
+    @keyframes fadeIn {{
+        0% {{ opacity: 0; transform: translateY(20px); }}
+        100% {{ opacity: 1; transform: translateY(0); }}
+    }}
+
+    @keyframes bounceIn {{
+        0%, 20%, 40%, 60%, 80%, 100% {{
+            transition-timing-function: cubic-bezier(0.215, 0.610, 0.355, 1.000);
+        }}
+        0% {{ transform: scale(0.3); opacity: 0; }}
+        20% {{ transform: scale(1.1); }}
+        40% {{ transform: scale(0.9); }}
+        60% {{ transform: scale(1.03); opacity: 1; }}
+        80% {{ transform: scale(0.97); }}
+        100% {{ transform: scale(1); }}
+    }}
+    </style>
+""", unsafe_allow_html=True)
+
+# 5️⃣ 예제 컴포넌트
+st.title("🧸 테마 실험실")
+st.button("눌러봐요")
+st.success("색상이 반영되고 있나요?")
+
+# 페이지별 내용
+if page == "홈":
+    st.subheader("🏠 홈 페이지")
+    name = st.text_input("🧸 이름을 입력하세요:")
+    if name:
+        st.success(f"안녕하세요, {name}님!")
+
+elif page == "크롤링":
+    st.subheader("🔎 크롤링 페이지")
+    if st.button("크롤링 시작"):
+        st.info("크롤링을 시작합니다...")
+
+elif page == "무협":
+    st.subheader("⚔️ 무협 웹툰 분석")
+    user_input = st.text_input("📝 분석할 웹툰 이름 입력:")
+    if user_input:
+        st.write(f"'{user_input}'을(를) 분석합니다.")
