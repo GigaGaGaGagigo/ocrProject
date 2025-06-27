@@ -3,7 +3,7 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 
 # DB 연결 정보
 DB_USER = 'root'
-DB_PASSWORD = 'ejs!dnf2'
+DB_PASSWORD = 'qnditm][5712'
 DB_HOST = 'localhost'
 DB_PORT = '3306'
 DB_NAME = 'ocrproject'
