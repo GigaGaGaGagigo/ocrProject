@@ -32,7 +32,6 @@ class CutImage(Base):
     __tablename__ = 'cut_image'
 
     id = Column(Integer, primary_key=True, index=True)
-    webtoon_id = Column(Integer)
     episode_id = Column(Integer)
     cut_number = Column(Integer)
     image_path = Column(String(500))

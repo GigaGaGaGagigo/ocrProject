@@ -1,62 +1,48 @@
 import streamlit as st
 from PIL import Image
-import easyocr
+import requests
 import numpy as np
-import cv2
+import easyocr
+from io import BytesIO
 
-# EasyOCR 리더 초기화
+# EasyOCR 리더 초기화 (한글 + 영어)
 reader = easyocr.Reader(['ko', 'en'])
 
-st.set_page_config(page_title="웹툰 말풍선 OCR", layout="wide")
-st.title("📖 웹툰 말풍선 인식기")
-st.write("말풍선을 감지하고, 각 영역에서 텍스트를 추출합니다.")
+# Streamlit 설정
+st.set_page_config(page_title="웹툰 이미지 URL OCR", layout="centered")
+
+st.title("🌐 웹툰 이미지 URL 텍스트 추출기")
+st.write("이미지 URL을 입력하면 웹툰 컷 속 텍스트를 추출합니다.")
 st.markdown("---")
 
-# 말풍선 감지 및 OCR 함수
-def detect_speech_bubbles_and_ocr(pil_image):
-    image = np.array(pil_image.convert("RGB"))
-    gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+# 이미지 URL 입력 받기
+image_url = st.text_input("이미지 URL을 입력하세요", placeholder="https://...IMAG01_1.jpg")
 
-    # 밝은 영역(말풍선) 탐지용 threshold
-    _, thresh = cv2.threshold(gray, 220, 255, cv2.THRESH_BINARY)
+if image_url:
+    headers = {
+    "User-Agent": "Mozilla/5.0"
+    }
+    try:
+        response = requests.get(image_url, headers=headers, timeout=5)
+        if response.status_code == 200 and 'image' in response.headers.get("Content-Type", ""):
+            image = Image.open(BytesIO(response.content))
+            st.image(image, caption="불러온 이미지", use_column_width=True)
 
-    # 외곽선 찾기
-    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            with st.spinner("🔍 텍스트 인식 중..."):
+                result = reader.readtext(np.array(image), detail=0)
 
-    annotated_img = image.copy()
-    all_texts = []
-
-    for cnt in contours:
-        x, y, w, h = cv2.boundingRect(cnt)
-        if w > 50 and h > 30:  # 너무 작은 말풍선은 무시
-            bubble_crop = image[y:y + h, x:x + w]
-            text = reader.readtext(bubble_crop, detail=0)
-            all_texts.extend(text)
-            cv2.rectangle(annotated_img, (x, y), (x + w, y + h), (255, 0, 0), 2)
-
-    return annotated_img, all_texts
-
-# 업로드 UI
-uploaded_file = st.file_uploader("웹툰 이미지를 업로드하세요", type=["png", "jpg", "jpeg"])
-
-if uploaded_file:
-    image = Image.open(uploaded_file)
-    st.image(image, caption="업로드된 원본 이미지", use_column_width=True)
-
-    with st.spinner("말풍선 감지 중..."):
-        annotated, texts = detect_speech_bubbles_and_ocr(image)
-
-    st.markdown("### 📍 감지된 말풍선 (박스 표시)")
-    st.image(annotated, channels="RGB", use_column_width=True)
-
-    st.markdown("### 📋 추출된 텍스트")
-    if texts:
-        for i, t in enumerate(texts, 1):
-            st.write(f"**{i}.** {t}")
-    else:
-        st.warning("말풍선 텍스트가 인식되지 않았습니다. 이미지 품질 또는 말풍선 색상을 확인하세요.")
+            st.markdown("### 📋 추출된 텍스트")
+            if result:
+                for i, line in enumerate(result, 1):
+                    st.write(f"**{i}.** {line}")
+            else:
+                st.warning("텍스트를 인식하지 못했습니다. 다른 이미지를 시도해 보세요.")
+        else:
+            st.error(f"이미지를 불러오는 데 실패했습니다. 상태 코드: {response.status_code}")
+    except Exception as e:
+        st.error(f"이미지 로드 중 오류 발생: {e}")
 else:
-    st.info("이미지를 업로드하면 감지 및 텍스트 추출이 시작됩니다.")
+    st.info("📎 이미지 URL을 입력하면 텍스트를 자동 추출합니다.")
 
 st.markdown("---")
-st.caption("말풍선 감지 기반 OCR v1.0 (EasyOCR + OpenCV)")
+st.caption("🧠 Made with EasyOCR + Streamlit")

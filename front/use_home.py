@@ -5,10 +5,11 @@ from io import BytesIO
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from db.database import SessionLocal
-from db.crawl_sql import Webtoon, WebtoonGroup, Episode
+from db.crawl_sql import Webtoon, CutImage, Episode
 from function.code_label import GENRE_MAP, GENRE_LABEL_TO_CODE
 import time
 import io
+import os
 
 st.set_page_config(page_title="웹툰 비교 뷰어", layout="wide")
 st.title("📖 한영 웹툰 컷 비교 뷰어")
@@ -125,6 +126,8 @@ def select_webtoon():
 
 def webtoon_read(ep_kr: Episode, ep_en: Episode):
 
+    session = SessionLocal()
+
     # 🧩 세션 상태 초기화
     for key, default in {
         "kr_url": "",
@@ -170,32 +173,80 @@ def webtoon_read(ep_kr: Episode, ep_en: Episode):
         idx = st.session_state.cut_index
         headers = {"User-Agent": "Mozilla/5.0"}
         st.markdown(f"### 🖼 컷 번호: {idx}")
+
+        # 여기 코드 추가
+        # 🔍 CutImage 검색 및 렌더링
+        kr_cut = session.query(CutImage).filter_by(
+            episode_id=ep_kr.id,
+            cut_number=idx
+        ).first()
+
+        en_cut = session.query(CutImage).filter_by(
+            episode_id=ep_en.id,
+            cut_number=idx
+        ).first()
+
         col_kr, col_en = st.columns(2)
 
-        # 🇰🇷 한글 컷
-        kr_img_height = None
-        with col_kr:
-            try:
-                kr_full_url = jpg_url_update(st.session_state.kr_url, idx)
-                response = requests.get(kr_full_url, headers=headers)
-                if response.status_code == 200:
-                    kr_img = Image.open(BytesIO(response.content))
-                    kr_img_height = kr_img.height
-                    st.image(kr_img, use_container_width=True)
+        if(kr_cut and en_cut):
+            with col_kr:
+                try:
+                    response = requests.get(kr_cut.image_path, headers=headers)
+                    if response.status_code == 200:
+                        kr_img = Image.open(BytesIO(response.content))
+                        st.image(kr_img, use_container_width=True)
 
-                    # 컷별 높이 기록
-                    if len(st.session_state.kor_heights) < idx:
-                        accumulated = sum(h[1] - h[0] for h in st.session_state.kor_heights)
-                        st.session_state.kor_heights.append((accumulated, accumulated + kr_img_height))
-                else:
-                    st.warning("❌ 한글 컷을 불러올 수 없습니다.")
-            except Exception as e:
-                st.error(f"한글 URL 오류: {e}")
+                    else:
+                        st.warning("❌ 한글 컷을 불러올 수 없습니다.")
+                except Exception as e:
+                    st.error(f"한글 URL 오류: {e}")
 
-        # 🇺🇸 영어 컷 (같은 높이 만큼만 잘라서 표시)
-        with col_en:
-            try:
-                if len(st.session_state.kor_heights) >= idx:
+            # 🇺🇸 영어 컷 (같은 높이 만큼만 잘라서 표시)
+            with col_en:    
+                try:
+
+                    filename = "image/" + en_cut.image_path
+                    st.image(filename)
+                    
+                except Exception as e:
+                    st.warning(f"영어 웹툰 캡처 실패: {e}")
+        else:
+            # 🇰🇷 한글 컷
+            kr_img_height = None
+            with col_kr:
+                try:
+                    kr_full_url = jpg_url_update(st.session_state.kr_url, idx)
+                    response = requests.get(kr_full_url, headers=headers)
+                    if response.status_code == 200:
+                        kr_img = Image.open(BytesIO(response.content))
+                        kr_img_height = kr_img.height
+                        st.image(kr_img, use_container_width=True)
+
+                        # 컷별 높이 기록
+                        if len(st.session_state.kor_heights) < idx:
+                            accumulated = sum(h[1] - h[0] for h in st.session_state.kor_heights)
+                            st.session_state.kor_heights.append((accumulated, accumulated + kr_img_height))
+                        
+                        if(kr_cut is None):
+                            # db에 저장
+                            new_kr_cut = CutImage(
+                                episode_id=ep_kr.id,
+                                cut_number=idx,
+                                image_path=kr_full_url,
+                                height_px=kr_img_height
+                            )
+                            session.add(new_kr_cut)
+                            session.commit()
+
+                    else:
+                        st.warning("❌ 한글 컷을 불러올 수 없습니다.")
+                except Exception as e:
+                    st.error(f"한글 URL 오류: {e}")
+
+            # 🇺🇸 영어 컷 (같은 높이 만큼만 잘라서 표시)
+            with col_en:
+                try:
+                    
                     y_start, y_end = st.session_state.kor_heights[idx - 1]
                     eng_crop = capture_webtoon_crop(
                         st.session_state.en_url,
@@ -204,8 +255,30 @@ def webtoon_read(ep_kr: Episode, ep_en: Episode):
                         ep_en.cut_size,
                         target_height=kr_img_height if kr_img_height else None   # 높이 맞추기
                     )
+
+                    # 이미지 보여주기
                     st.image(eng_crop, use_container_width=True)
-                else:
-                    st.info("먼저 한글 컷을 불러오면 영어 캡처도 함께 출력됩니다.")
-            except Exception as e:
-                st.warning(f"영어 웹툰 캡처 실패: {e}")
+
+                    # --- 이미지 저장 ---
+                    save_dir = "image"
+                    os.makedirs(save_dir, exist_ok=True)
+                    filename = f"{ep_en.webtoon_id}_{ep_en.episode_number}_{idx}.jpg"
+                    save_path = os.path.join(save_dir, filename)
+
+                    # 저장
+                    eng_crop.save(save_path, format="JPEG", quality=90)
+
+                    # db에 저장
+                    new_en_cut = CutImage(
+                        episode_id=ep_en.id,
+                        cut_number=idx,
+                        image_path=filename,
+                        height_px=kr_img_height
+                    )
+                    session.add(new_en_cut)
+                    session.commit()
+
+                except Exception as e:
+                    st.warning(f"영어 웹툰 캡처 실패: {e}")
+
+    session.close()
