@@ -10,7 +10,6 @@ class Webtoon(Base):
     company = Column(String(100))
     language = Column(String(10))  # ex: 'kr', 'en'
     genre = Column(Integer)        # 0=로맨스, 1=액션, ...
-    cut_size = Column(Integer, default=0)
     url = Column(Text)
 
 class WebtoonGroup(Base):
@@ -27,7 +26,7 @@ class Episode(Base):
     lang = Column(String(10))     # 'kr', 'en'
     url = Column(Text)            # 에피소드 웹 URL
     jpg_url = Column(Text)        # 이미지 시드 URL, 예: https://.../_IMAG01_1.jpg
-
+    cut_size = Column(Integer, default=0)
 
 class CutImage(Base):
     __tablename__ = 'cut_image'

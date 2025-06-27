@@ -1,6 +1,6 @@
 import streamlit as st
 from db.database import SessionLocal
-from db.crawl_sql import Webtoon, WebtoonGroup, Episode, CutImage
+from db.crawl_sql import Webtoon, WebtoonGroup, Episode
 from sqlalchemy import or_
 from function import save_cut_images_from_episode
 from PIL import Image
@@ -8,15 +8,7 @@ import os
 import requests
 from io import BytesIO
 import sqlalchemy.exc
-
-# 장르 코드 ↔ 명칭 매핑
-GENRE_MAP = {
-    0: "액션",
-    1: "로맨스",
-    2: "스릴러",
-    3: "무협"
-}
-GENRE_LABEL_TO_CODE = {v: k for k, v in GENRE_MAP.items()}
+from function.code_label import GENRE_MAP, GENRE_LABEL_TO_CODE
 
 def show():
     st.header("🕸 웹툰 URL 저장")
@@ -72,7 +64,6 @@ def show():
         with st.expander("🆕 영어 웹툰 추가"):
             new_title_en = st.text_input("영어 웹툰 제목")
             new_url_en = st.text_input("영어 웹툰 URL")
-            cut_size_en = st.number_input("캡처시 상단 자르는 범위 px단위", value=50)
 
             if st.button("영어 웹툰 등록"):
                 # 1. 웹툰 그룹 생성
@@ -89,8 +80,7 @@ def show():
                     genre=selected_webtoon.genre,
                     url=new_url_en,
                     language="en",
-                    group_id=new_group.id,
-                    cut_size = cut_size_en
+                    group_id=new_group.id
                 )
                 session.add(new_webtoon_en)
 
@@ -144,6 +134,7 @@ def show():
             # ✨ 영어 웹툰 에피소드 입력
             st.subheader("🌎 영어 웹툰 에피소드 입력")
             episode_url_en = st.text_input("에피소드 URL 등록하기 (영어)", key="en_url")
+            cut_size_en = st.number_input("캡처시 상단 자르는 범위 px단위", value=50)
 
             if episode_url_en:
                 episode_en = session.query(Episode).filter_by(
@@ -160,7 +151,8 @@ def show():
                                 episode_number=episode_number_input,
                                 lang="en",
                                 url=episode_url_en,
-                                jpg_url=None  # 영어는 이미지 URL 없음
+                                jpg_url=None,  # 영어는 jpg URL 없음
+                                cut_size = cut_size_en
                             )
                             session.add(new_ep_en)
                             session.commit()
