@@ -1,8 +1,8 @@
 import streamlit as st
-from front import home, crawl, mu, my
+from front import  url_insert, mu, my, use_home
 
 # 1️⃣ 필수: 맨 위에서 page 설정
-st.set_page_config(page_title="COMIC STUDY 🍀", layout="wide")
+#st.set_page_config(page_title="COMIC STUDY", layout="wide")
 
 
 # 2️⃣ 초록 귀여운 테마 CSS
@@ -65,11 +65,11 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # 3️⃣ 상단 타이틀
-st.title("🌿 Comic Study💚")
+st.title("Comic Study")
 
 # 4️⃣ 사이드바 메뉴
 with st.sidebar:
-    st.image("스크린샷 2025-06-26 오전 10.24.19.png", use_column_width=True)
+    st.image("6c533d8e7a2dc27d.png", width=90, use_column_width=True)
     col1, col2 = st.columns(2)
     with col1:
         st.button("🏠 홈", key="home_button")
@@ -79,15 +79,17 @@ with st.sidebar:
         st.button("🧑‍🎓 마이", key="my_button")
 
     st.markdown("---")
-    page = st.selectbox("🌱 페이지 선택", ["홈", "크롤링", "무협", "마이페이지"])
+    page = st.selectbox("🌱 페이지 선택", ["홈", "무협", "마이페이지"])
+    st.markdown("---")
+    page1 = st.selectbox("관리자", ["크롤링"])
+
 
 # 5️⃣ 라우팅 처리
 if page == "홈":
-    home.show()
-elif page == "크롤링":
-    crawl.show()
+    use_home.select_webtoon()
+elif page1 == "크롤링":
+    url_insert.show()
 elif page == "무협":
     mu.show()
 elif page == "마이페이지":
     my.show()
-
