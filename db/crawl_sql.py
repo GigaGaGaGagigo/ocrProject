@@ -36,3 +36,13 @@ class CutImage(Base):
     cut_number = Column(Integer)
     image_path = Column(String(500))
     height_px = Column(Integer)  # px 단위, 추후 계산해서 넣을 수 있음
+
+class Dialogue(Base): # 텍스트 부분 추가 (종윤님 확인필요)
+    __tablename__ = 'dialogue'
+
+    id = Column(Integer, primary_key=True)
+    cut_image_id = Column(Integer)
+    content = Column(Text)
+    type = Column(String(50))
+    sequence = Column(Integer)
+    speaker_id = Column(Integer)
