@@ -25,8 +25,11 @@ pip install streamlit sqlalchemy pymysql # DB연동을 위함
 
 .\venv\Scripts\python.exe -m pip install selenium
 
-# 실행
-python app.py
+
+# git 병합
+git stash
+# 풀 받은후 
+git stash pop
 
 # streamlit 실행
 streamlit run streamlit_webtoon_ocr.py

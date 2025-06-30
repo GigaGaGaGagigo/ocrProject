@@ -5,7 +5,8 @@ from io import BytesIO
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from db.database import SessionLocal
-from db.crawl_sql import Webtoon, CutImage, Episode
+from db.crawl_sql import Webtoon, CutImage, Episode, Dialogue
+from function.ocr_easy import analyze_image , analyze_image_from_url
 from function.code_label import GENRE_MAP, GENRE_LABEL_TO_CODE
 import time
 import io
@@ -128,6 +129,8 @@ def webtoon_read(ep_kr: Episode, ep_en: Episode):
 
     session = SessionLocal()
 
+    ocr_check = 0
+
     # 🧩 세션 상태 초기화
     for key, default in {
         "kr_url": "",
@@ -140,26 +143,6 @@ def webtoon_read(ep_kr: Episode, ep_en: Episode):
 
     # ◀️ 이전 / 다음 ▶️ 버튼
     left, center, right = st.columns([1, 6, 1])
-    with left:
-        # 여백
-        st.write(" ")
-        st.write(" ")
-        st.write(" ")
-        st.write(" ")
-        st.write(" ")
-        st.write(" ")
-        if st.button("◀️ 이전 컷") and st.session_state.cut_index > 1:
-            st.session_state.cut_index -= 1
-    with right:
-        # 여백
-        st.write(" ")
-        st.write(" ")
-        st.write(" ")
-        st.write(" ")
-        st.write(" ")
-        st.write(" ")
-        if st.button("다음 컷 ▶️"):
-            st.session_state.cut_index += 1
 
     # 🔗 URL 입력
     with center:
@@ -209,10 +192,12 @@ def webtoon_read(ep_kr: Episode, ep_en: Episode):
                     st.image(filename)
                     
                 except Exception as e:
-                    st.warning(f"영어 웹툰 캡처 실패: {e}")
+                    st.warning(f"영어 웹툰 불러오기 실패: {e}")
+                    st.rerun
         else:
             # 🇰🇷 한글 컷
             kr_img_height = None
+
             with col_kr:
                 try:
                     kr_full_url = jpg_url_update(st.session_state.kr_url, idx)
@@ -237,27 +222,37 @@ def webtoon_read(ep_kr: Episode, ep_en: Episode):
                             )
                             session.add(new_kr_cut)
                             session.commit()
-
                     else:
                         st.warning("❌ 한글 컷을 불러올 수 없습니다.")
                 except Exception as e:
                     st.error(f"한글 URL 오류: {e}")
+                    st.rerun
 
             # 🇺🇸 영어 컷 (같은 높이 만큼만 잘라서 표시)
+            new_en_cut = None
+
             with col_en:
                 try:
-                    
-                    y_start, y_end = st.session_state.kor_heights[idx - 1]
-                    eng_crop = capture_webtoon_crop(
-                        st.session_state.en_url,
-                        y_start,
-                        y_end,
-                        ep_en.cut_size,
-                        target_height=kr_img_height if kr_img_height else None   # 높이 맞추기
-                    )
+                    # 한글 이미지 높이 기록이 누락되어 있으면 계산 후 추가
+                    if len(st.session_state.kor_heights) < idx:
+                        accumulated = sum(h[1] - h[0] for h in st.session_state.kor_heights)
+                        st.session_state.kor_heights.append((accumulated, accumulated + kr_img_height))
 
-                    # 이미지 보여주기
-                    st.image(eng_crop, use_container_width=True)
+                    # ✅ 리스트 길이 확인 후 안전하게 접근
+                    if len(st.session_state.kor_heights) >= idx:
+                        y_start, y_end = st.session_state.kor_heights[idx - 1]
+                        eng_crop = capture_webtoon_crop(
+                            st.session_state.en_url,
+                            y_start,
+                            y_end,
+                            ep_en.cut_size,
+                            target_height=kr_img_height if kr_img_height else None
+                        )
+
+                        st.image(eng_crop, use_container_width=True)
+
+                    # ocr실행할지 체크
+                    ocr_check = 1
 
                     # --- 이미지 저장 ---
                     save_dir = "image"
@@ -277,8 +272,146 @@ def webtoon_read(ep_kr: Episode, ep_en: Episode):
                     )
                     session.add(new_en_cut)
                     session.commit()
-
+                    
                 except Exception as e:
                     st.warning(f"영어 웹툰 캡처 실패: {e}")
+                    st.rerun
+
+    ci_kr = kr_cut if kr_cut else new_kr_cut
+    ci_en = en_cut if en_cut else new_en_cut
+
+    half_height = ci_kr.height_px - 1000
+    half_height = int(half_height / 2)
+
+    with left:
+        st.markdown(f"<div style='height:{half_height}px'></div>", unsafe_allow_html=True)
+        if st.button("이전 컷 ◀️", use_container_width=True):
+            if st.session_state.cut_index > 1:
+                st.session_state.cut_index -= 1
+                st.rerun()
+    with right:
+        st.markdown(f"<div style='height:{half_height}px'></div>", unsafe_allow_html=True)
+        if st.button("다음 컷 ▶️", use_container_width=True):
+            st.session_state.cut_index += 1
+            st.rerun()
+
+    webtoon_dialogue(ci_kr, ci_en, ocr_check)
+    session.close()
+    
+
+def webtoon_dialogue(ci_kr: CutImage, ci_en: CutImage, ocr_check):
+    session = SessionLocal()
+    st.header("💬 웹툰 대사 매칭 및 편집")
+
+    # 기존 대사 불러오기
+    kr_dialogues = session.query(Dialogue).filter_by(cut_image_id=ci_kr.id).order_by(Dialogue.sequence).all()
+    en_dialogues = session.query(Dialogue).filter_by(cut_image_id=ci_en.id).order_by(Dialogue.sequence).all()
+    max_len = max(len(kr_dialogues), len(en_dialogues))
+
+    # ocr 실행
+    if(len(kr_dialogues) == 0 and len(en_dialogues) == 0 and ocr_check == 1):
+    # if(len(kr_dialogues) == 0 and len(en_dialogues) == 0):
+
+        #  # EasyOCR 분석 실행
+        # kr_easy_merged = analyze_image_from_url(ci_kr.image_path)
+
+        # for i, (x, y, w, h, text, conf) in enumerate(kr_easy_merged):
+        #     # 문자열이 아닌 경우 str()로 변환
+        #     if not isinstance(text, str):
+        #         text = str(text)
+
+        #     ocr_kr_d = Dialogue(
+        #         cut_image_id=ci_kr.id,
+        #         sequence=i + 1,
+        #         content=text  # ✅ content는 문자열이어야 함
+        #     )
+        #     session.add(ocr_kr_d)
+
+
+
+        eg_img_path = "image/" + ci_en.image_path
+        
+        easy_merged = analyze_image(eg_img_path)
+
+        for i, (x, y, w, h, text, conf) in enumerate(easy_merged):
+            # 문자열이 아닌 경우 str()로 변환
+            if not isinstance(text, str):
+                text = str(text)
+
+            ocr_eg_d = Dialogue(
+                cut_image_id=ci_en.id,
+                sequence=i + 1,
+                content=text  # ✅ content는 문자열이어야 함
+            )
+            session.add(ocr_eg_d)
+
+        session.commit()  # ❗ 커밋은 루프 밖에서 한 번만
+        st.rerun()
+
+        
+
+    # ✅ 대사 목록 표시 (개별 삭제 및 수정 가능)
+    for i in range(max_len):
+        col1, col2, col3 = st.columns([4, 4, 1])
+        with col1:
+            if i < len(kr_dialogues):
+                kr_d = kr_dialogues[i]
+                kr_d.content = st.text_input(label="", value=kr_d.content, key=f"kr_{i}")
+            else:
+                st.text_input(label="", value="대사 없음", key=f"kr_empty_{i}", disabled=True)
+
+        with col2:
+            if i < len(en_dialogues):
+                en_d = en_dialogues[i]
+                en_d.content = st.text_input(label="", value=en_d.content, key=f"en_{i}")
+            else:
+                st.text_input(label="", value="No dialogue", key=f"en_empty_{i}", disabled=True)
+
+        with col3:
+            if st.button("🗑️", key=f"delete_{i}"):
+                if i < len(kr_dialogues):
+                    session.delete(kr_dialogues[i])
+                if i < len(en_dialogues):
+                    session.delete(en_dialogues[i])
+                session.commit()
+                st.success(f"✅ 대사 {i + 1} 삭제 완료")
+                st.rerun()
+
+    # ✅ 대사 추가 영역 (언제든 추가 가능)
+    st.markdown("### ➕ 새로운 대사 추가")
+    col1, col2 = st.columns(2)
+    with col1:
+        new_kr = st.text_input("한국어 대사", key="new_kr_input")
+    with col2:
+        new_en = st.text_input("영어 대사", key="new_en_input")
+
+    sequence = max_len + 1
+
+    if st.button("➕ 추가"):
+        if new_kr.strip():
+            new_kr_d = Dialogue(
+                cut_image_id=ci_kr.id,
+                sequence=sequence,
+                content=new_kr.strip()
+            )
+            session.add(new_kr_d)
+        if new_en.strip():
+            new_en_d = Dialogue(
+                cut_image_id=ci_en.id,
+                sequence=sequence,
+                content=new_en.strip()
+            )
+            session.add(new_en_d)
+
+        session.commit()
+        st.success("✅ 대사 추가 완료")
+        st.rerun()
+
+    # ✅ 저장 버튼
+    if max_len > 0 and st.button("💾 전체 저장"):
+        for d in kr_dialogues + en_dialogues:
+            session.add(d)
+        session.commit()
+        st.success("✅ 전체 저장 완료")
 
     session.close()

@@ -1,6 +1,11 @@
 import easyocr
 import os
 import cv2
+import numpy as np
+import requests
+from io import BytesIO
+from PIL import Image
+
 
 # easyocr 분석 및 말풍선 단위 클러스터링
 
@@ -36,6 +41,34 @@ def analyze_image(image_path):
     merged = merge_clusters(easy_boxes, clusters)
 
     return result, merged  # 원본 결과와 병합 결과 둘 다 반환
+
+def analyze_image_from_url(image_url):
+    try:
+        response = requests.get(image_url)
+        response.raise_for_status()
+        image = Image.open(BytesIO(response.content)).convert("RGB")
+        image_np = np.array(image)
+
+        result = reader.readtext(image_np)
+
+        # 말풍선 병합용 박스 포맷 변환
+        easy_boxes = []
+        for r in result:
+            box = r[0]
+            (x1, y1), (x2, y2), (x3, x3), (x4, y4) = box
+            x_min, y_min = int(min(x1, x2, x3, x4)), int(min(y1, y2, y3, y4))
+            x_max, y_max = int(max(x1, x2, x3, x4)), int(max(y1, y2, y3, y4))
+            w, h = x_max - x_min, y_max - y_min
+            easy_boxes.append([x_min, y_min, w, h, r[1], r[2]])
+
+        clusters = cluster_boxes_edge_distance(easy_boxes, eps=25)
+        merged = merge_clusters(easy_boxes, clusters)
+
+        return result, merged
+
+    except Exception as e:
+        print(f"[❌ URL OCR 실패]: {e}")
+        return [], []
 
 
 # 💾 2. DB 저장용: episode_id 기준 컷 이미지 전체 분석
