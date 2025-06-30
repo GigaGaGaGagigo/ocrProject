@@ -309,40 +309,33 @@ def webtoon_dialogue(ci_kr: CutImage, ci_en: CutImage, ocr_check):
     max_len = max(len(kr_dialogues), len(en_dialogues))
 
     # ocr 실행
-    if(len(kr_dialogues) == 0 and len(en_dialogues) == 0 and ocr_check == 1):
-    # if(len(kr_dialogues) == 0 and len(en_dialogues) == 0):
+    # if(len(kr_dialogues) == 0 and len(en_dialogues) == 0 and ocr_check == 1):
+    if(len(kr_dialogues) == 0 and len(en_dialogues) == 0):
 
         #  # EasyOCR 분석 실행
-        # kr_easy_merged = analyze_image_from_url(ci_kr.image_path)
+        kr_easy_raw, kr_easy_merged = analyze_image_from_url(ci_kr.image_path)
 
-        # for i, (x, y, w, h, text, conf) in enumerate(kr_easy_merged):
-        #     # 문자열이 아닌 경우 str()로 변환
-        #     if not isinstance(text, str):
-        #         text = str(text)
-
-        #     ocr_kr_d = Dialogue(
-        #         cut_image_id=ci_kr.id,
-        #         sequence=i + 1,
-        #         content=text  # ✅ content는 문자열이어야 함
-        #     )
-        #     session.add(ocr_kr_d)
+        for i, (x, y, w, h, text, conf) in enumerate(kr_easy_merged):
+            # 문자열이 아닌 경우 str()로 변환
+            ocr_kr_d = Dialogue(
+                cut_image_id=ci_kr.id,
+                sequence=i + 1,
+                content=text  # ✅ content는 문자열이어야 함
+            )
+            session.add(ocr_kr_d)
 
 
 
         eg_img_path = "image/" + ci_en.image_path
         
-        easy_merged = analyze_image(eg_img_path)
+        easy_raw, easy_merged  = analyze_image(eg_img_path)
 
         for i, (x, y, w, h, text, conf) in enumerate(easy_merged):
-            # 문자열이 아닌 경우 str()로 변환
-            if not isinstance(text, str):
-                text = str(text)
-
             ocr_eg_d = Dialogue(
-                cut_image_id=ci_en.id,
-                sequence=i + 1,
-                content=text  # ✅ content는 문자열이어야 함
-            )
+                    cut_image_id=ci_en.id,
+                    content=text,
+                    sequence= i+1
+                )
             session.add(ocr_eg_d)
 
         session.commit()  # ❗ 커밋은 루프 밖에서 한 번만

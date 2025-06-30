@@ -44,8 +44,12 @@ def analyze_image(image_path):
 
 def analyze_image_from_url(image_url):
     try:
-        response = requests.get(image_url)
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+        }
+        response = requests.get(image_url, headers=headers)
         response.raise_for_status()
+
         image = Image.open(BytesIO(response.content)).convert("RGB")
         image_np = np.array(image)
 
@@ -55,7 +59,7 @@ def analyze_image_from_url(image_url):
         easy_boxes = []
         for r in result:
             box = r[0]
-            (x1, y1), (x2, y2), (x3, x3), (x4, y4) = box
+            (x1, y1), (x2, y2), (x3, y3), (x4, y4) = box
             x_min, y_min = int(min(x1, x2, x3, x4)), int(min(y1, y2, y3, y4))
             x_max, y_max = int(max(x1, x2, x3, x4)), int(max(y1, y2, y3, y4))
             w, h = x_max - x_min, y_max - y_min
