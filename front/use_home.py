@@ -8,6 +8,7 @@ from db.database import SessionLocal
 from db.crawl_sql import Webtoon, CutImage, Episode, Dialogue
 from function.ocr_easy import analyze_image , analyze_image_from_url
 from function.code_label import GENRE_MAP, GENRE_LABEL_TO_CODE
+from function.quiz_utils import quiz_page  # 퀴즈 함수 불러오기
 import time
 import io
 import os
@@ -57,12 +58,12 @@ def capture_webtoon_crop(url, y_start, y_end, cute_size: int, target_height=None
 def select_webtoon():
     session = SessionLocal()
 
-    # 웹툰 보기 모드 상태 확인
+    # ✅ 리더 모드 진입 시
     if st.session_state.get("view_mode") == "reader":
         selected_ep_kr = st.session_state["selected_ep_kr"]
         selected_ep_en = st.session_state.get("selected_ep_en")
         webtoon_read(selected_ep_kr, selected_ep_en)
-        return  # 함수 종료하여 아래 UI 안 보이게 함
+        return
 
     # ✅ 본문 영역 상단에 검색 필터 표시
     st.subheader("🔍 웹툰 검색")
@@ -99,30 +100,42 @@ def select_webtoon():
                 selected_ep_kr = ep_kr[selected_idx - 1]
                 selected_ep_en = ep_en[selected_idx - 1] if len(ep_en) >= selected_idx else None
 
-                st.markdown("---")
-                st.markdown(f"### 🇰🇷 한글 에피소드 정보")
-                st.write(f"- 에피소드 번호: {selected_ep_kr.episode_number}")
-                st.write(f"- URL: {selected_ep_kr.url}")
-                st.write(f"- 이미지 경로: {selected_ep_kr.jpg_url}")
-                st.write(f"- 컷 수: {selected_ep_kr.cut_size}")
+                # --- 에피소드 정보는 주석 처리 ---
+                # st.markdown("---")
+                # st.markdown(f"### 🇰🇷 한글 에피소드 정보")
+                # st.write(f"- 에피소드 번호: {selected_ep_kr.episode_number}")
+                # st.write(f"- URL: {selected_ep_kr.url}")
+                # st.write(f"- 이미지 경로: {selected_ep_kr.jpg_url}")
+                # st.write(f"- 컷 수: {selected_ep_kr.cut_size}")
 
+                # if selected_ep_en:
+                #     st.markdown(f"### 🇺🇸 영어 에피소드 정보")
+                #     st.write(f"- 에피소드 번호: {selected_ep_en.episode_number}")
+                #     st.write(f"- URL: {selected_ep_en.url}")
+                # else:
+                #     st.warning("❌ 해당 회차의 영어 버전이 존재하지 않습니다.")
+
+                # 🎯 퀴즈 expander 추가
                 if selected_ep_en:
-                    st.markdown(f"### 🇺🇸 영어 에피소드 정보")
-                    st.write(f"- 에피소드 번호: {selected_ep_en.episode_number}")
-                    st.write(f"- URL: {selected_ep_en.url}")
-                else:
-                    st.warning("❌ 해당 회차의 영어 버전이 존재하지 않습니다.")
+                    with st.expander("🎯 퀴즈 풀기", expanded=False):
+                        from function.quiz_utils import quiz_page
+                        quiz_page(selected_ep_kr, selected_ep_en)
 
-                if st.button("📖 이 회차 보기"):
-                    # 세션에 정보 저장하고 다음 호출 시 바로 보기 모드 진입
-                    st.session_state["view_mode"] = "reader"
-                    st.session_state["selected_ep_kr"] = selected_ep_kr
-                    st.session_state["selected_ep_en"] = selected_ep_en
-                    st.rerun()  # 화면 다시 그리기
+                    # ▶️ 리더 모드 진입 버튼 - 퀴즈 아래에 따로 오른쪽 정렬
+                    _, col_btn = st.columns([6, 1])
+                    with col_btn:
+                        if st.button("📖 이 회차 보기", key="btn_reader"):
+                            st.session_state["view_mode"] = "reader"
+                            st.session_state["selected_ep_kr"] = selected_ep_kr
+                            st.session_state["selected_ep_en"] = selected_ep_en
+                            st.rerun()
+                else:
+                    st.info("❌ 영어 에피소드가 없어 퀴즈를 만들 수 없습니다.")
 
     elif search_keyword:
         st.warning("❌ 해당 검색어에 맞는 웹툰이 없습니다.")
 
+    session.close()
 
 
 def webtoon_read(ep_kr: Episode, ep_en: Episode):
