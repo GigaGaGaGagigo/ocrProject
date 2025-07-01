@@ -51,7 +51,8 @@ CREATE TABLE dialogue (
     content TEXT,
     type VARCHAR(50),
     sequence INT,
-    speaker_id INT  -- speaker.id를 참조
+    speaker_id INT,               -- speaker.id를 참조
+    matched_dialogue_id INT       -- 매칭된 다른 언어의 dialogue.id
 );
 
 CREATE TABLE speaker (
