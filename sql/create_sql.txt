@@ -55,6 +55,12 @@ CREATE TABLE dialogue (
     matched_dialogue_id INT       -- 매칭된 다른 언어의 dialogue.id
 );
 
+ALTER TABLE dialogue
+ADD COLUMN dialogue_type VARCHAR(50) DEFAULT '대사';
+
+ALTER TABLE dialogue
+DROP COLUMN type;
+
 CREATE TABLE speaker (
     id INT AUTO_INCREMENT PRIMARY KEY,
     webtoon_id INT,              -- 어떤 웹툰의 등장인물인지
