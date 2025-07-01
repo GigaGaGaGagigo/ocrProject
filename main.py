@@ -6,13 +6,13 @@ st.set_page_config(page_title="Comic Study", layout="wide")
 
 # ✅ 1. 테마 및 폰트 크기 선택 UI (사이드바)
 with st.sidebar:
-    st.image("images/loge.png", width=90, use_container_width=True)
+    st.image("images/loge2.png", width=120, use_container_width=True)
 
-    st.markdown('<div class="sidebar-title">🌟 사용자 메뉴</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sidebar-title"> 사용자 메뉴</div>', unsafe_allow_html=True)
     page = st.selectbox("📖 페이지 이동", ["홈", "마이페이지"])
 
     st.markdown("---")
-    st.markdown('<div class="sidebar-title">🎨 사용자 설정</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sidebar-title"> 사용자 설정</div>', unsafe_allow_html=True)
     theme = st.selectbox("🌈 테마 선택", ["에어블루", "애플민트", "말랑복숭아", "밀크베이지"])
     font_size = st.radio("🔠 폰트 크기", ["작게", "보통", "크게"], index=1)
 
@@ -26,9 +26,9 @@ with st.sidebar:
 
 # ✅ 2. 테마 정의
 font_size_css = {
-    "작게": "10px",
+    "작게": "12px",
     "보통": "16px",
-    "크게": "40px"
+    "크게": "24px"
 }[font_size]
 
 # 참고 샘플
@@ -49,13 +49,13 @@ themes = {
     "애플민트": {
         "bg": "#f0fff9",
         "sidebar": "#c6f5e6",
-        "title": "#26a69a",
+        "title": "#1e7f75",
         "font": "#2e4e40"
     },
     "말랑복숭아": {
         "bg": "#fff7f9",         
         "sidebar": "#ffeef2",    
-        "title": "#f6a5b5",      
+        "title": "#e5738a",   
         "font": "#5e4b4b"       
     },
     "밀크베이지": {
@@ -98,24 +98,44 @@ section[data-testid="stSidebar"] {{
     color: {selected_theme["font"]};
 }}
 
-/* 제목 스타일 + 자연스러운 등장 */
+/* 사이드바 타이틀 (사용자 메뉴, 설정 등) */
+.sidebar-title {{
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    color: {selected_theme["title"]};
+}}
+
+/* 제목 스타일 (크기 고정 + 자연스러운 등장) */
 h1, h2, h3 {{
     color: {selected_theme["title"]};
     animation: fadeSlideUp 0.6s ease-out;
 }}
 
-/* 버튼 스타일 (단색, hover 효과 없음) */
+/* 버튼 스타일 */
 div.stButton > button {{
     background-color: {selected_theme["title"]};
-    color: white;
+    color: white !important;
     font-weight: 600;
     padding: 10px 20px;
     border: none;
     border-radius: 12px;
     cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }}
 
-/* 포커스 및 hover 시 붉은색 제거 + 테마색 적용 */
+div.stButton > button:hover {{
+    background-color: {selected_theme["title"]}CC;  /* hover 시 약간 어둡게 */
+    color: white !important;
+}}
+
+div.stButton > button:active {{
+    background-color: {selected_theme["title"]}AA;  /* active 시 더 어둡게 */
+    color: white !important;
+}}
+
+/* 포커스 및 hover 시 붉은색 제거 + 테마색 유지 */
 button:focus, button:active, 
 input:focus, input:active, 
 textarea:focus, textarea:active, 
@@ -132,6 +152,7 @@ button:hover, input:hover, select:hover, textarea:hover {{
     box-shadow: none !important;
 }}
 
+/* 체크박스 및 라디오 버튼 포커스 효과 */
 input[type="checkbox"]:focus, input[type="radio"]:focus {{
     outline: none !important;
     box-shadow: 0 0 0 2px {selected_theme["title"]}40 !important;
@@ -143,7 +164,40 @@ label, .stSelectbox > div {{
     color: {selected_theme["font"]} !important;
 }}
 
-/* 전체 페이드인 애니메이션 */
+/* 일반 텍스트 (본문 출력용) */
+.stMarkdown p, .stTextBlock, .stText, .stCaption {{
+    font-size: {font_size_css} !important;
+    line-height: 1.6;
+}}
+
+/* 입력창, 셀렉트박스 내부 텍스트 */
+input, textarea, select {{
+    font-size: {font_size_css} !important;
+}}
+
+/* 사이드바 내부 설정 텍스트 */
+section[data-testid="stSidebar"] .stSelectbox,
+section[data-testid="stSidebar"] .stRadio,
+section[data-testid="stSidebar"] .stCheckbox,
+section[data-testid="stSidebar"] p,
+section[data-testid="stSidebar"] label {{
+    font-size: {font_size_css} !important;
+}}
+
+/* 마이페이지 라벨/입력/슬라이더/확장 등 */
+label, .css-1cpxqw2, .css-qrbaxs, .stSlider, .stSelectbox, .stTextInput, .stTextArea {{
+    font-size: {font_size_css} !important;
+}}
+
+.css-1y4p8pa {{  /* 슬라이더 현재 값 */
+    font-size: {font_size_css} !important;
+}}
+
+details summary {{  /* expander 제목 */
+    font-size: {font_size_css} !important;
+}}
+
+/* 페이드인 애니메이션 */
 @keyframes fadeIn {{
     0% {{ opacity: 0; transform: translateY(20px); }}
     100% {{ opacity: 1; transform: translateY(0); }}
