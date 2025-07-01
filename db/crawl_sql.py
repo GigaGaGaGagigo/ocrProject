@@ -46,3 +46,4 @@ class Dialogue(Base):
     type = Column(String(50))
     sequence = Column(Integer)
     speaker_id = Column(Integer)
+    matched_dialogue_id = Column(Integer)

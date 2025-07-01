@@ -118,7 +118,6 @@ def select_webtoon():
                 # 🎯 퀴즈 expander 추가
                 if selected_ep_en:
                     with st.expander("🎯 퀴즈 풀기", expanded=False):
-                        from function.quiz_utils import quiz_page
                         quiz_page(selected_ep_kr, selected_ep_en)
 
                     # ▶️ 리더 모드 진입 버튼 - 퀴즈 아래에 따로 오른쪽 정렬
@@ -287,8 +286,8 @@ def webtoon_read(ep_kr: Episode, ep_en: Episode):
                     session.commit()
                     
                 except Exception as e:
-                    st.warning(f"영어 웹툰 캡처 실패: {e}")
-                    st.rerun
+                    st.warning(f"❌ 영어 웹툰 캡처 실패: {e} - 다시 시도 중...")
+                    st.rerun()  # ✅ 함수로 호출해야 정상 동작
 
     ci_kr = kr_cut if kr_cut else new_kr_cut
     ci_en = en_cut if en_cut else new_en_cut
@@ -308,7 +307,10 @@ def webtoon_read(ep_kr: Episode, ep_en: Episode):
             st.session_state.cut_index += 1
             st.rerun()
 
-    webtoon_dialogue(ci_kr, ci_en, ocr_check)
+    if ci_kr and ci_en:
+        webtoon_dialogue(ci_kr, ci_en, ocr_check)
+    else:
+        st.warning("❗컷 이미지 정보를 찾을 수 없어 대사 분석을 생략합니다.")
     session.close()
     
 
@@ -322,20 +324,25 @@ def webtoon_dialogue(ci_kr: CutImage, ci_en: CutImage, ocr_check):
     max_len = max(len(kr_dialogues), len(en_dialogues))
 
     # ocr 실행
-    # if(len(kr_dialogues) == 0 and len(en_dialogues) == 0 and ocr_check == 1):
-    if(len(kr_dialogues) == 0 and len(en_dialogues) == 0):
+    if(len(kr_dialogues) == 0 and len(en_dialogues) == 0 and ocr_check == 1):
 
         #  # EasyOCR 분석 실행
         kr_easy_raw, kr_easy_merged = analyze_image_from_url(ci_kr.image_path)
 
+        kr_dialogue_objs = []  # 이 리스트에 DB에 넣은 한국어 Dialogue 객체들을 저장할 거예요
+
         for i, (x, y, w, h, text, conf) in enumerate(kr_easy_merged):
-            # 문자열이 아닌 경우 str()로 변환
-            ocr_kr_d = Dialogue(
-                cut_image_id=ci_kr.id,
-                sequence=i + 1,
-                content=text  # ✅ content는 문자열이어야 함
-            )
-            session.add(ocr_kr_d)
+            if(conf > 0.4):
+                ocr_kr_d = Dialogue(
+                    cut_image_id=ci_kr.id,
+                    sequence=i + 1,
+                    content=text
+                )
+                session.add(ocr_kr_d)
+                kr_dialogue_objs.append(ocr_kr_d)
+
+        session.flush()  # DB에 ID 자동 할당되게 하고 계속 사용 가능하게 함 (commit 전에 id 사용 가능)
+
 
 
 
@@ -344,14 +351,18 @@ def webtoon_dialogue(ci_kr: CutImage, ci_en: CutImage, ocr_check):
         easy_raw, easy_merged  = analyze_image(eg_img_path)
 
         for i, (x, y, w, h, text, conf) in enumerate(easy_merged):
-            ocr_eg_d = Dialogue(
-                    cut_image_id=ci_en.id,
-                    content=text,
-                    sequence= i+1
-                )
-            session.add(ocr_eg_d)
+            if(conf > 0.6):
+                matched_kr_d = kr_dialogue_objs[i] if i < len(kr_dialogue_objs) else None
 
-        session.commit()  # ❗ 커밋은 루프 밖에서 한 번만
+                ocr_eg_d = Dialogue(
+                    cut_image_id=ci_en.id,
+                    sequence=i + 1,
+                    content=text,
+                    matched_dialogue_id=matched_kr_d.id if matched_kr_d else None
+                )
+                session.add(ocr_eg_d)
+
+        session.commit()
         st.rerun()
 
         
@@ -405,7 +416,8 @@ def webtoon_dialogue(ci_kr: CutImage, ci_en: CutImage, ocr_check):
             new_en_d = Dialogue(
                 cut_image_id=ci_en.id,
                 sequence=sequence,
-                content=new_en.strip()
+                content=new_en.strip(),
+                matched_dialogue_id = new_kr_d.id
             )
             session.add(new_en_d)
 
