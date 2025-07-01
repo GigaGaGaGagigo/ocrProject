@@ -43,7 +43,7 @@ class Dialogue(Base):
     id = Column(Integer, primary_key=True, index=True)
     cut_image_id = Column(Integer)
     content = Column(Text)
-    type = Column(String(50))
+    dialogue_type = Column(String(50))
     sequence = Column(Integer)
     speaker_id = Column(Integer)
     matched_dialogue_id = Column(Integer)

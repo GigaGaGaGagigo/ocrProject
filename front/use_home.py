@@ -369,20 +369,26 @@ def webtoon_dialogue(ci_kr: CutImage, ci_en: CutImage, ocr_check):
 
     # ✅ 대사 목록 표시 (개별 삭제 및 수정 가능)
     for i in range(max_len):
-        col1, col2, col3 = st.columns([4, 4, 1])
+        col_type, col1, col2, col3 = st.columns([1.2, 4, 4, 0.2])
+        with col_type:
+            current_type = kr_dialogues[i].dialogue_type if i < len(kr_dialogues) and kr_dialogues[i].dialogue_type else "대사"
+            new_type = st.selectbox("", ["대사", "효과음", "배경글시"], index=["대사", "효과음", "배경글시"].index(current_type), key=f"type_{i}", label_visibility="collapsed")
+            if i < len(kr_dialogues):
+                kr_dialogues[i].dialogue_type = new_type
+
         with col1:
             if i < len(kr_dialogues):
                 kr_d = kr_dialogues[i]
-                kr_d.content = st.text_input(label="", value=kr_d.content, key=f"kr_{i}")
+                kr_d.content = st.text_input(label="", value=kr_d.content, key=f"kr_{i}", label_visibility="collapsed")
             else:
-                st.text_input(label="", value="대사 없음", key=f"kr_empty_{i}", disabled=True)
+                st.text_input(label="", value="대사 없음", key=f"kr_empty_{i}", disabled=True, label_visibility="collapsed")
 
         with col2:
             if i < len(en_dialogues):
                 en_d = en_dialogues[i]
-                en_d.content = st.text_input(label="", value=en_d.content, key=f"en_{i}")
+                en_d.content = st.text_input(label="", value=en_d.content, key=f"en_{i}", label_visibility="collapsed")
             else:
-                st.text_input(label="", value="No dialogue", key=f"en_empty_{i}", disabled=True)
+                st.text_input(label="", value="No dialogue", key=f"en_empty_{i}", disabled=True, label_visibility="collapsed")
 
         with col3:
             if st.button("🗑️", key=f"delete_{i}"):
@@ -391,7 +397,6 @@ def webtoon_dialogue(ci_kr: CutImage, ci_en: CutImage, ocr_check):
                 if i < len(en_dialogues):
                     session.delete(en_dialogues[i])
                 session.commit()
-                st.success(f"✅ 대사 {i + 1} 삭제 완료")
                 st.rerun()
 
     # ✅ 대사 추가 영역 (언제든 추가 가능)
