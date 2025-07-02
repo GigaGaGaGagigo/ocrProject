@@ -45,6 +45,8 @@ def show():
             # 🗨️ 병합된 말풍선 텍스트 출력
             st.markdown("**🗨️ 말풍선 단위 병합 결과:**")
             for i, (x, y, w, h, text, conf) in enumerate(easy_merged):
+                print("------------------")
+                print(conf)
                 st.write(f"{i+1:02d}. \"{text}\" (신뢰도 평균: {conf:.2f})")
 
             # 시각화
