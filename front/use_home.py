@@ -203,7 +203,7 @@ def select_webtoon():
                         quiz_page(selected_ep_kr, selected_ep_en)
 
                     # ▶️ 회차 보기 버튼 (오른쪽 정렬)
-                    _, col_btn = st.columns([6, 1])
+                    _, col_btn = st.columns([5.7, 1.3])
                     with col_btn:
                         if st.button("📖 이 회차 보기", key="btn_reader"):
                             st.session_state["view_mode"] = "reader"
@@ -423,43 +423,47 @@ def webtoon_dialogue(ci_kr: CutImage, ci_en: CutImage, ocr_check):
     # ocr 실행
     if(len(kr_dialogues) == 0 and len(en_dialogues) == 0 and ocr_check == 1):
 
-        #  # EasyOCR 분석 실행
-        kr_easy_raw, kr_easy_merged = analyze_image_from_url(ci_kr.image_path)
+        try:
+            #  # EasyOCR 분석 실행
+            kr_easy_raw, kr_easy_merged = analyze_image_from_url(ci_kr.image_path)
 
-        kr_dialogue_objs = []  # 이 리스트에 DB에 넣은 한국어 Dialogue 객체들을 저장할 거예요
+            kr_dialogue_objs = []  # 이 리스트에 DB에 넣은 한국어 Dialogue 객체들을 저장할 거예요
 
-        for i, (x, y, w, h, text, conf) in enumerate(kr_easy_merged):
-            if(conf > 0.4):
-                ocr_kr_d = Dialogue(
-                    cut_image_id=ci_kr.id,
-                    sequence=i + 1,
-                    content=text
-                )
-                session.add(ocr_kr_d)
-                kr_dialogue_objs.append(ocr_kr_d)
+            for i, (x, y, w, h, text, conf) in enumerate(kr_easy_merged):
+                if(conf > 0.4):
+                    ocr_kr_d = Dialogue(
+                        cut_image_id=ci_kr.id,
+                        sequence=i + 1,
+                        content=text,
+                        dialogue_type="대사"
+                    )
+                    session.add(ocr_kr_d)
+                    kr_dialogue_objs.append(ocr_kr_d)
 
-        session.flush()  # DB에 ID 자동 할당되게 하고 계속 사용 가능하게 함 (commit 전에 id 사용 가능)
+            session.flush()  # DB에 ID 자동 할당되게 하고 계속 사용 가능하게 함 (commit 전에 id 사용 가능)
 
 
 
 
-        eg_img_path = "image/" + ci_en.image_path
-        
-        easy_raw, easy_merged  = analyze_image(eg_img_path)
+            eg_img_path = "image/" + ci_en.image_path
+            
+            easy_raw, easy_merged  = analyze_image(eg_img_path)
 
-        for i, (x, y, w, h, text, conf) in enumerate(easy_merged):
-            if(conf > 0.6):
-                matched_kr_d = kr_dialogue_objs[i] if i < len(kr_dialogue_objs) else None
+            for i, (x, y, w, h, text, conf) in enumerate(easy_merged):
+                if(conf > 0.6):
+                    matched_kr_d = kr_dialogue_objs[i] if i < len(kr_dialogue_objs) else None
 
-                ocr_eg_d = Dialogue(
-                    cut_image_id=ci_en.id,
-                    sequence=i + 1,
-                    content=text,
-                    matched_dialogue_id=matched_kr_d.id if matched_kr_d else None
-                )
-                session.add(ocr_eg_d)
+                    ocr_eg_d = Dialogue(
+                        cut_image_id=ci_en.id,
+                        sequence=i + 1,
+                        content=text,
+                        matched_dialogue_id=matched_kr_d.id if matched_kr_d else None
+                    )
+                    session.add(ocr_eg_d)
 
-        session.commit()
+            session.commit()
+        except Exception as e:
+            print("검색된 글이 없는 경우", e)
         st.rerun()
 
         
@@ -469,7 +473,7 @@ def webtoon_dialogue(ci_kr: CutImage, ci_en: CutImage, ocr_check):
         col_type, col1, col2, col3 = st.columns([1.2, 4, 4, 0.2])
         with col_type:
             current_type = kr_dialogues[i].dialogue_type if i < len(kr_dialogues) and kr_dialogues[i].dialogue_type else "대사"
-            new_type = st.selectbox("", ["대사", "효과음", "배경글시"], index=["대사", "효과음", "배경글시"].index(current_type), key=f"type_{i}", label_visibility="collapsed")
+            new_type = st.selectbox("", ["대사", "효과음", "배경 글씨"], index=["대사", "효과음", "배경 글씨"].index(current_type), key=f"type_{i}", label_visibility="collapsed")
             if i < len(kr_dialogues):
                 kr_dialogues[i].dialogue_type = new_type
 
@@ -497,41 +501,49 @@ def webtoon_dialogue(ci_kr: CutImage, ci_en: CutImage, ocr_check):
                 st.rerun()
 
     # ✅ 대사 추가 영역 (언제든 추가 가능)
-    st.markdown("### ➕ 새로운 대사 추가")
-    col1, col2 = st.columns(2)
-    with col1:
-        new_kr = st.text_input("한국어 대사", key="new_kr_input")
-    with col2:
-        new_en = st.text_input("영어 대사", key="new_en_input")
+    with st.expander("### ➕ 새로운 대사 추가", expanded=False):
+        col_type, col1, col2 = st.columns([1, 3, 3])
+        with col_type:
+            new_type = st.selectbox("글 종류", ["대사", "효과음", "배경 글씨"], key="new_type_input")
+        with col1:
+            new_kr = st.text_input("한국어 대사", key="new_kr_input")
+        with col2:
+            new_en = st.text_input("영어 대사", key="new_en_input")
 
-    sequence = max_len + 1
+        sequence = max_len + 1
 
-    if st.button("➕ 추가"):
-        if new_kr.strip():
-            new_kr_d = Dialogue(
-                cut_image_id=ci_kr.id,
-                sequence=sequence,
-                content=new_kr.strip()
-            )
-            session.add(new_kr_d)
-        if new_en.strip():
-            new_en_d = Dialogue(
-                cut_image_id=ci_en.id,
-                sequence=sequence,
-                content=new_en.strip(),
-                matched_dialogue_id = new_kr_d.id
-            )
-            session.add(new_en_d)
+        __, add_btn_col = st.columns([6, 1])
+        with add_btn_col:
+            if st.button(label="➕ 추가"):
+                if new_kr.strip():
+                    new_kr_d = Dialogue(
+                        cut_image_id=ci_kr.id,
+                        sequence=sequence,
+                        content=new_kr.strip(),
+                        dialogue_type=new_type  # 선택한 타입 저장
+                    )
+                    session.add(new_kr_d)
+                if new_en.strip():
+                    new_en_d = Dialogue(
+                        cut_image_id=ci_en.id,
+                        sequence=sequence,
+                        content=new_en.strip(),
+                        matched_dialogue_id = new_kr_d.id
+                    )
+                    session.add(new_en_d)
 
-        session.commit()
-        st.success("✅ 대사 추가 완료")
-        st.rerun()
+                session.commit()
+                st.success("✅ 대사 추가 완료")
+                st.rerun()
+
+    __, save_btn_col = st.columns([6, 1])
 
     # ✅ 저장 버튼
-    if max_len > 0 and st.button("💾 전체 저장"):
-        for d in kr_dialogues + en_dialogues:
-            session.add(d)
-        session.commit()
-        st.success("✅ 전체 저장 완료")
+    with save_btn_col:
+        if max_len > 0 and st.button("💾 전체 저장"):
+            for d in kr_dialogues + en_dialogues:
+                session.add(d)
+            session.commit()
+            st.success("✅ 전체 저장 완료")
 
     session.close()

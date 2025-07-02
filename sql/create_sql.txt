@@ -67,6 +67,13 @@ CREATE TABLE speaker (
     name VARCHAR(255) NOT NULL   -- 등장인물 이름
 );
 
+CREATE TABLE wrong_note (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    kr_dialogue_id INT NOT NULL,           -- 한글 대사 Dialogue.id
+    en_dialogue_id INT NOT NULL,           -- 영어 대사 Dialogue.id
+    wrong_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- INSERT INTO webtoon_group (group_name)
 -- VALUES 
 -- ('화산귀환 / Return of the Mount Hua Sect'),
