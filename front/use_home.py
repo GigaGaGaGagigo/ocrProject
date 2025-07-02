@@ -13,8 +13,8 @@ import time
 import io
 import os
 
-st.set_page_config(page_title="웹툰 비교 뷰어", layout="wide")
-st.title("📖 한영 웹툰 컷 비교 뷰어")
+# st.set_page_config(page_title="웹툰 비교 뷰어", layout="wide")
+# st.title("📖 한영 웹툰 컷 비교 뷰어")
 
 # 🧩 한글 URL에서 컷 번호 조합
 def jpg_url_update(url: str, num: int) -> str:
@@ -264,7 +264,7 @@ def webtoon_read(ep_kr: Episode, ep_en: Episode):
 
         idx = st.session_state.cut_index
         headers = {"User-Agent": "Mozilla/5.0"}
-        st.markdown(f"### 🖼️ 컷 번호: {idx}")
+        st.markdown(f"### 🎬 컷 번호: {idx}")
 
         # 여기 코드 추가
         # 🔍 CutImage 검색 및 렌더링

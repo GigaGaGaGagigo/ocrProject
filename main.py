@@ -228,6 +228,42 @@ elif admin_mode and page1 == "OCR 분석":
     ocr_admin_eval.show()
 else:
     if page == "홈":
+        # 👉 슬로건 + 설명글 먼저 출력
+        if "selected_ep_kr" not in st.session_state:
+            st.markdown(f"""
+                <div class="home-header">
+                    <div class="home-slogan"> 웹툰으로 배우는 스마트한 언어 학습 </div>
+                    <div class="home-description">
+                        AI를 활용해 자동으로 웹툰 말풍선을 인식해서, 자연스럽게 언어를 학습해보세요. <br>
+                        지금 바로 검색창에 웹툰을 입력해보세요!
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+
+            # 👉 스타일 정의
+            st.markdown(f"""
+            <style>
+            .home-header {{
+                text-align: left;
+                margin-top: 30px;
+                margin-bottom: 40px;
+            }}
+            .home-slogan {{
+                font-size: 36px;
+                font-weight: 700;
+                color: {selected_theme["title"]};
+                margin-bottom: 20px;
+            }}
+            .home-description {{
+                font-size: 18px;
+                color: {selected_theme["font"]};
+                line-height: 1.7;
+            }}
+            </style>
+            """, unsafe_allow_html=True)
+
+        # 👉 웹툰 검색 기능 실행
         use_home.select_webtoon()
+
     elif page == "마이페이지":
         my.show()

@@ -1,6 +1,5 @@
 import streamlit as st
 
-
 def show():
     
     st.header("🏠 마이페이지")
@@ -10,20 +9,18 @@ def show():
     # ✅ 탭 나누기
     tab2, tab3 = st.tabs(["학습 기록", "설정 / 제안"])
 
-  
-
     # ▶️ 탭2: 학습 기록 및 미션
     with tab2:
-        col12, col22 = st.columns(2)
-        col3, col4 = st.columns(2)
+        col3, col22 = st.columns(2)
+        col12, col4 = st.columns(2)
         col5, col6 = st.columns(2)
 
-        with col12:
-            with st.expander("📈 나의 학습 통계 보기", expanded=True):
-                st.write("총 학습 컷 수: 34컷")
-                st.write("OCR 사용 횟수: 20회")
-                st.write("정답률: 72%")
-                st.line_chart([10, 15, 20, 22, 30, 34])
+        with col3:
+            with st.expander("🎯 오늘의 학습 미션", expanded=True):
+                st.write("✅ 웹툰 5컷 보기")
+                st.write("✅ 한글-영어 문장 비교해보기")
+                st.write("⬜ 단어 복습 3개")
+                st.progress(0.66)
 
         with col22:
             with st.expander("📘 오답노트", expanded=True):
@@ -33,14 +30,14 @@ def show():
                 if st.button("📤 단어장 내보내기"):
                     st.success("✅ 단어장이 다운로드되었습니다 (예시)")
 
-        #col3, col4 = st.columns(2)
+        #col12, col4 = st.columns(2)
 
-        with col3:
-            with st.expander("🎯 오늘의 학습 미션"):
-                st.write("✅ 웹툰 5컷 보기")
-                st.write("✅ OCR 결과 확인 1회")
-                st.write("⬜ 단어 복습 3개")
-                st.progress(0.66)
+        with col12:
+            with st.expander("📈 나의 학습 통계 보기"):
+                st.write("총 학습 컷 수: 34컷")
+                st.write("OCR 사용 횟수: 20회")
+                st.write("정답률: 72%")
+                st.line_chart([10, 15, 20, 22, 30, 34])
 
         with col4:
             with st.expander("🌟 오늘의 추천 웹툰"):
