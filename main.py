@@ -13,14 +13,14 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown('<div class="sidebar-title"> 사용자 설정</div>', unsafe_allow_html=True)
-    theme = st.selectbox("🌈 테마 선택", ["에어블루", "애플민트", "말랑복숭아", "밀크베이지"])
+    theme = st.selectbox("🌈 테마 선택", ["에어블루", "애플민트", "말랑복숭아", "미스트블루", "모노샌드"])
     font_size = st.radio("🔠 폰트 크기", ["작게", "보통", "크게"], index=1)
 
     st.markdown("---")
     st.markdown('<div class="sidebar-title">🔐 관리자 메뉴</div>', unsafe_allow_html=True)
     admin_mode = st.checkbox("관리자 모드")
     if admin_mode:
-        page1 = st.selectbox("🛠️ 관리자 기능", ["URL 입력"])
+        page1 = st.selectbox("🛠️ 관리자 기능", ["URL 입력", "OCR 분석"])
     else:
         page1 = None
 
@@ -46,11 +46,11 @@ themes = {
         "title": "#3d8ec9",
         "font": "#2a3d4f"
     },
-    "애플민트": {
-        "bg": "#f0fff9",
-        "sidebar": "#c6f5e6",
-        "title": "#1e7f75",
-        "font": "#2e4e40"
+    "애플민트":  {
+        "bg": "#f4fffa",          # 아주 연한 민트화이트
+        "sidebar": "#d9f3eb",     # 은은한 세이지 민트
+        "title": "#3b8f85",       # 톤다운된 청록 (채도 안정)
+        "font": "#2f4e48"         # 차분한 딥세이지
     },
     "말랑복숭아": {
         "bg": "#fff7f9",         
@@ -58,11 +58,17 @@ themes = {
         "title": "#e5738a",   
         "font": "#5e4b4b"       
     },
-    "밀크베이지": {
-        "bg": "#fffaf2",
-        "sidebar": "#f5e6d3",
-        "title": "#a67c52",
-        "font": "#3e2f20"
+    "미스트블루": {
+        "bg": "#f6f8fa",         # 블루그레이 화이트
+        "sidebar": "#dde3e9",    # 안개 낀 파란 하늘
+        "title": "#6d7c8a",      # 딥 블루그레이
+        "font": "#2f3a40"        # 진한 쿨그레이
+    },
+    "모노샌드": {
+        "bg": "#fdfcf9",         # 샌드 화이트
+        "sidebar": "#eae5dd",    # 뉴트럴 베이지
+        "title": "#968c7f",      # 애쉬 브라운
+        "font": "#403c38"        # 다크 브라운 그레이
     }
 }
 selected_theme = themes[theme] 
@@ -217,6 +223,9 @@ st.title(f" Comic Study 🗯️ ")
 # ✅ 5. 페이지 라우팅 처리
 if admin_mode and page1 == "URL 입력":
     url_insert.show()
+elif admin_mode and page1 == "OCR 분석":
+    from front import ocr_admin_eval
+    ocr_admin_eval.show()
 else:
     if page == "홈":
         use_home.select_webtoon()

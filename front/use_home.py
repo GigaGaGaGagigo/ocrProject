@@ -58,6 +58,14 @@ def capture_webtoon_crop(url, y_start, y_end, cute_size: int, target_height=None
 def select_webtoon():
     session = SessionLocal()
 
+    # 세션 상태 기본값 설정
+    if "search_keyword" not in st.session_state:
+        st.session_state.search_keyword = ""
+    if "selected_genre" not in st.session_state:
+        st.session_state.selected_genre = "전체"
+    if "selected_webtoon_id" not in st.session_state:
+        st.session_state.selected_webtoon_id = None
+
     # ✅ 리더 모드 진입 시
     if st.session_state.get("view_mode") == "reader":
         selected_ep_kr = st.session_state["selected_ep_kr"]
@@ -65,34 +73,123 @@ def select_webtoon():
         webtoon_read(selected_ep_kr, selected_ep_en)
         return
 
-    # ✅ 본문 영역 상단에 검색 필터 표시
+    # 본문 영역 상단에 검색 필터 표시
     st.subheader("🔍 웹툰 검색")
     col1, col2 = st.columns([1, 5])
-    with col1:
-        selected_genre = st.selectbox("장르 선택", ["전체"] + list(GENRE_MAP.values()))
-    with col2:
-        search_keyword = st.text_input("웹툰 제목 검색")
 
-    # --- 웹툰 필터링 ---
-    query = session.query(Webtoon).filter(Webtoon.language == 'kr')
-    if selected_genre != "전체":
-        genre_code = list(GENRE_MAP.keys())[list(GENRE_MAP.values()).index(selected_genre)]
+    with col1:
+        st.session_state.selected_genre = st.selectbox(
+            "장르 선택",
+            ["전체"] + list(GENRE_MAP.values()),
+            index=(["전체"] + list(GENRE_MAP.values())).index(st.session_state.selected_genre)
+        )
+
+    with col2:
+        st.session_state.search_keyword = st.text_input(
+            "웹툰 제목 검색",
+            value=st.session_state.search_keyword
+        )
+
+    # # --- 웹툰 필터링 --- (초기 버전)
+    # query = session.query(Webtoon).filter(Webtoon.language == 'kr')
+    # if selected_genre != "전체":
+    #     genre_code = list(GENRE_MAP.keys())[list(GENRE_MAP.values()).index(selected_genre)]
+    #     query = query.filter(Webtoon.genre == genre_code)
+    # if search_keyword:
+    #     query = query.filter(Webtoon.title.contains(search_keyword))
+
+    # webtoon_list = query.order_by(Webtoon.title).all()
+
+    # if search_keyword and webtoon_list:
+    #     st.subheader("🇰🇷 웹툰 목록")
+    #     selected_webtoon = st.selectbox("웹툰 선택", webtoon_list, format_func=lambda w: w.title)
+
+    #     if selected_webtoon:
+    #         st.markdown(f"### ✏️ 선택한 웹툰: {selected_webtoon.title}")
+            
+    #         ep_kr = session.query(Episode).filter_by(webtoon_id=selected_webtoon.id, lang="kr").order_by(Episode.episode_number).all()
+    #         ep_en = session.query(Episode).filter_by(webtoon_id=selected_webtoon.id, lang="en").order_by(Episode.episode_number).all()
+
+    #         kr_eps = [f"{ep.episode_number}화" for ep in ep_kr]
+    #         selected_idx = st.selectbox("🇰🇷 에피소드 선택", list(range(1, len(kr_eps)+1)), format_func=lambda i: kr_eps[i-1])
+
+    #         if selected_idx:
+    #             selected_ep_kr = ep_kr[selected_idx - 1]
+    #             selected_ep_en = ep_en[selected_idx - 1] if len(ep_en) >= selected_idx else None
+
+    #             # --- 에피소드 정보는 주석 처리 ---
+    #             # st.markdown("---")
+    #             # st.markdown(f"### 🇰🇷 한글 에피소드 정보")
+    #             # st.write(f"- 에피소드 번호: {selected_ep_kr.episode_number}")
+    #             # st.write(f"- URL: {selected_ep_kr.url}")
+    #             # st.write(f"- 이미지 경로: {selected_ep_kr.jpg_url}")
+    #             # st.write(f"- 컷 수: {selected_ep_kr.cut_size}")
+
+    #             # if selected_ep_en:
+    #             #     st.markdown(f"### 🇺🇸 영어 에피소드 정보")
+    #             #     st.write(f"- 에피소드 번호: {selected_ep_en.episode_number}")
+    #             #     st.write(f"- URL: {selected_ep_en.url}")
+    #             # else:
+    #             #     st.warning("❌ 해당 회차의 영어 버전이 존재하지 않습니다.")
+
+    #             # 🎯 퀴즈 expander 추가
+    #             if selected_ep_en:
+    #                 with st.expander("🎯 퀴즈 풀기", expanded=False):
+    #                     quiz_page(selected_ep_kr, selected_ep_en)
+
+    #                 # ▶️ 리더 모드 진입 버튼 - 퀴즈 아래에 따로 오른쪽 정렬
+    #                 _, col_btn = st.columns([6, 1])
+    #                 with col_btn:
+    #                     if st.button("📖 이 회차 보기", key="btn_reader"):
+    #                         st.session_state["view_mode"] = "reader"
+    #                         st.session_state["selected_ep_kr"] = selected_ep_kr
+    #                         st.session_state["selected_ep_en"] = selected_ep_en
+    #                         st.rerun()
+    #             else:
+    #                 st.info("❌ 영어 에피소드가 없어 퀴즈를 만들 수 없습니다.")
+    # elif search_keyword:
+    #     st.warning("❌ 해당 검색어에 맞는 웹툰이 없습니다.")
+
+    # 🔍 웹툰 필터링 (개선)
+    query = session.query(Webtoon).filter(Webtoon.language == 'kr') 
+    if st.session_state.selected_genre != "전체":
+        genre_code = list(GENRE_MAP.keys())[list(GENRE_MAP.values()).index(st.session_state.selected_genre)]
         query = query.filter(Webtoon.genre == genre_code)
-    if search_keyword:
-        query = query.filter(Webtoon.title.contains(search_keyword))
+    if st.session_state.search_keyword:
+        query = query.filter(Webtoon.title.contains(st.session_state.search_keyword))
 
     webtoon_list = query.order_by(Webtoon.title).all()
 
-    if search_keyword and webtoon_list:
+    if st.session_state.search_keyword and webtoon_list:
         st.subheader("🇰🇷 웹툰 목록")
-        selected_webtoon = st.selectbox("웹툰 선택", webtoon_list, format_func=lambda w: w.title)
+
+        # ✅ 자동 선택을 위한 인덱스 계산
+        selected_index = 0
+        if st.session_state.selected_webtoon_id:
+            for i, w in enumerate(webtoon_list):
+                if w.id == st.session_state.selected_webtoon_id:
+                    selected_index = i
+                    break
+
+        # ✅ 웹툰 선택 with 자동 선택 기능
+        selected_webtoon = st.selectbox(
+            "웹툰 선택",
+            webtoon_list,
+            index=selected_index,
+            format_func=lambda w: w.title
+        )
+
+        # ✅ 선택한 웹툰 ID 기억
+        st.session_state.selected_webtoon_id = selected_webtoon.id
 
         if selected_webtoon:
             st.markdown(f"### ✏️ 선택한 웹툰: {selected_webtoon.title}")
-            
+
+            # ✅ 해당 웹툰의 에피소드들 가져오기
             ep_kr = session.query(Episode).filter_by(webtoon_id=selected_webtoon.id, lang="kr").order_by(Episode.episode_number).all()
             ep_en = session.query(Episode).filter_by(webtoon_id=selected_webtoon.id, lang="en").order_by(Episode.episode_number).all()
 
+            # ✅ 한글 에피소드 번호 리스트
             kr_eps = [f"{ep.episode_number}화" for ep in ep_kr]
             selected_idx = st.selectbox("🇰🇷 에피소드 선택", list(range(1, len(kr_eps)+1)), format_func=lambda i: kr_eps[i-1])
 
@@ -100,27 +197,12 @@ def select_webtoon():
                 selected_ep_kr = ep_kr[selected_idx - 1]
                 selected_ep_en = ep_en[selected_idx - 1] if len(ep_en) >= selected_idx else None
 
-                # --- 에피소드 정보는 주석 처리 ---
-                # st.markdown("---")
-                # st.markdown(f"### 🇰🇷 한글 에피소드 정보")
-                # st.write(f"- 에피소드 번호: {selected_ep_kr.episode_number}")
-                # st.write(f"- URL: {selected_ep_kr.url}")
-                # st.write(f"- 이미지 경로: {selected_ep_kr.jpg_url}")
-                # st.write(f"- 컷 수: {selected_ep_kr.cut_size}")
-
-                # if selected_ep_en:
-                #     st.markdown(f"### 🇺🇸 영어 에피소드 정보")
-                #     st.write(f"- 에피소드 번호: {selected_ep_en.episode_number}")
-                #     st.write(f"- URL: {selected_ep_en.url}")
-                # else:
-                #     st.warning("❌ 해당 회차의 영어 버전이 존재하지 않습니다.")
-
-                # 🎯 퀴즈 expander 추가
+                # 🎯 퀴즈 보기
                 if selected_ep_en:
                     with st.expander("🎯 퀴즈 풀기", expanded=False):
                         quiz_page(selected_ep_kr, selected_ep_en)
 
-                    # ▶️ 리더 모드 진입 버튼 - 퀴즈 아래에 따로 오른쪽 정렬
+                    # ▶️ 회차 보기 버튼 (오른쪽 정렬)
                     _, col_btn = st.columns([6, 1])
                     with col_btn:
                         if st.button("📖 이 회차 보기", key="btn_reader"):
@@ -131,7 +213,7 @@ def select_webtoon():
                 else:
                     st.info("❌ 영어 에피소드가 없어 퀴즈를 만들 수 없습니다.")
 
-    elif search_keyword:
+    elif st.session_state.search_keyword:
         st.warning("❌ 해당 검색어에 맞는 웹툰이 없습니다.")
 
     session.close()
@@ -153,6 +235,21 @@ def webtoon_read(ep_kr: Episode, ep_en: Episode):
         if key not in st.session_state:
             st.session_state[key] = default
 
+    # 웹툰 이름 및 에피소드 정보 추가 
+    webtoon_title = session.query(Webtoon).get(ep_kr.webtoon_id).title
+    episode_number = ep_kr.episode_number
+
+    # 🧭 상단 바: 뒤로가기 + 제목 표시
+    col_title, col_back = st.columns([6, 1])
+
+    with col_title:
+        st.subheader(f"📚 {webtoon_title} - {episode_number}화")
+
+    with col_back:
+        if st.button("🔎 웹툰검색", key="back_btn"):
+            st.session_state.view_mode = None
+            st.rerun()
+
     # ◀️ 이전 / 다음 ▶️ 버튼
     left, center, right = st.columns([1, 6, 1])
 
@@ -167,7 +264,7 @@ def webtoon_read(ep_kr: Episode, ep_en: Episode):
 
         idx = st.session_state.cut_index
         headers = {"User-Agent": "Mozilla/5.0"}
-        st.markdown(f"### 🖼 컷 번호: {idx}")
+        st.markdown(f"### 🖼️ 컷 번호: {idx}")
 
         # 여기 코드 추가
         # 🔍 CutImage 검색 및 렌더링
