@@ -234,7 +234,7 @@ else:
                 <div class="home-header">
                     <div class="home-slogan"> 웹툰으로 배우는 스마트한 언어 학습 </div>
                     <div class="home-description">
-                        AI를 활용해 자동으로 웹툰 말풍선을 인식해서, 자연스럽게 언어를 학습해보세요. <br>
+                        AI를 활용해 자동으로 웹툰 말풍선을 인식한 뒤 자연스럽게 언어를 학습해보세요. <br>
                         지금 바로 검색창에 웹툰을 입력해보세요!
                     </div>
                 </div>
