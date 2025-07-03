@@ -1,7 +1,8 @@
 import random
 import streamlit as st
 from db.database import SessionLocal
-from db.crawl_sql import Dialogue, Episode, CutImage
+from db.crawl_sql import Dialogue, Episode, CutImage, WrongNote
+from sqlalchemy import and_, func
 
 def quiz_page(ep_kr: Episode, ep_en: Episode):
     st.header("🔠 영어 대사 퀴즈")
@@ -20,7 +21,12 @@ def quiz_page(ep_kr: Episode, ep_en: Episode):
         if en_d.matched_dialogue_id:
             kr_d = session.query(Dialogue).filter_by(id=en_d.matched_dialogue_id).first()
             if kr_d and kr_d.dialogue_type == "대사":
-                quiz_pairs.append((kr_d.content.strip(), en_d.content.strip()))
+                quiz_pairs.append((
+                    kr_d.content.strip(),
+                    en_d.content.strip(),
+                    kr_d.id,
+                    en_d.id
+                ))
 
     # 최소 문제 수 확인
     if len(quiz_pairs) < 4:
@@ -33,8 +39,8 @@ def quiz_page(ep_kr: Episode, ep_en: Episode):
         st.session_state.quiz_questions = random.sample(quiz_pairs, min(5, len(quiz_pairs)))
         st.session_state.quiz_options = {}
 
-        for i, (kr_text, en_text) in enumerate(st.session_state.quiz_questions):
-            other_choices = [e for (_, e) in quiz_pairs if e != en_text]
+        for i, (_, en_text, _, _) in enumerate(st.session_state.quiz_questions):
+            other_choices = [e for (_, e, _, _) in quiz_pairs if e != en_text]
             wrong_choices = random.sample(other_choices, min(3, len(other_choices)))
             options = wrong_choices + [en_text]
             random.shuffle(options)
@@ -44,7 +50,7 @@ def quiz_page(ep_kr: Episode, ep_en: Episode):
     options_dict = st.session_state.quiz_options
 
     # 5. 퀴즈 출력
-    for i, (kr_text, en_text) in enumerate(questions, start=1):
+    for i, (kr_text, en_text, kr_id, en_id) in enumerate(questions, start=1):
         st.markdown(f"#### 𝗤 문제 {i}")
         st.markdown(f"**한글 대사:** {kr_text}")
 
@@ -68,6 +74,30 @@ def quiz_page(ep_kr: Episode, ep_en: Episode):
             else:
                 st.error(f"❌ 틀렸습니다. 정답은: {en_text}")
 
+                # ⛳ WrongNote에 저장 또는 시간만 업데이트
+                existing_note = session.query(WrongNote).filter(
+                    and_(
+                        WrongNote.kr_dialogue_id == kr_id,
+                        WrongNote.en_dialogue_id == en_id
+                    )
+                ).first()
+
+                if existing_note:
+                    existing_note.wrong_at = func.now()
+                else:
+                    new_note = WrongNote(
+                        kr_dialogue_id=kr_id,
+                        en_dialogue_id=en_id
+                    )
+                    session.add(new_note)
+
+                session.commit()
+
         st.markdown("---")
 
+    if st.button("🔄 문제 변경"):
+        for key in list(st.session_state.keys()):
+            if key.startswith("q_") or key.startswith("check_") or key.startswith("quiz_") or key.startswith("user_answer_") or key.startswith("checked_"):
+                del st.session_state[key]
+        st.rerun()
     session.close()

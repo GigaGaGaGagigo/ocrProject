@@ -1,10 +1,19 @@
 import random
 import streamlit as st
 from db.database import SessionLocal
-from db.crawl_sql import Dialogue, Episode, CutImage
+from db.crawl_sql import Dialogue, Episode, CutImage, WrongNote
+from sqlalchemy import and_, func
+from dotenv import load_dotenv
+import os
 
 import google.generativeai as genai
-genai.configure(api_key="")  # 본인 Gemini API 키
+
+load_dotenv(dotenv_path="db_password.env")
+
+# 환경변수에서 api키 정보 읽기
+GEMINI_API_KEY = os.getenv("DB_USER")
+
+genai.configure(api_key=GEMINI_API_KEY)  # 본인 Gemini API 키
 
 def extract_text_from_image_with_gemini(img_path):
     try:
@@ -111,7 +120,7 @@ def quiz_page(ep_kr: Episode, ep_en: Episode, max_questions=5):
                 corrected_en = correct_ocr_with_gemini(gemini_text, ocr_text, lang="en")
                 kr_text = kr_d.content.strip()
                 if kr_text and corrected_en:
-                    quiz_pairs.append((kr_text, corrected_en))
+                    quiz_pairs.append((kr_text, corrected_en, kr_d.id, en_d.id))
 
     n_quiz = min(max_questions, len(quiz_pairs))
     if n_quiz < 1:
@@ -133,7 +142,7 @@ def quiz_page(ep_kr: Episode, ep_en: Episode, max_questions=5):
     for i, idx in enumerate(indices, start=1):
         if idx >= len(quiz_pairs):
             continue
-        kr_text, en_text = quiz_pairs[idx]
+        kr_text, en_text, kr_id, en_id = quiz_pairs[idx]
 
         # Gemini 오답 생성 (원본 응답까지)
         options, answer_idx, gemini_raw = make_gemini_choices(kr_text, en_text)
@@ -166,6 +175,25 @@ def quiz_page(ep_kr: Episode, ep_en: Episode, max_questions=5):
                 st.success("🎉 정답입니다!")
             else:
                 st.error(f"❌ 틀렸습니다. 정답은: {options[answer_idx]}")
+
+                # ⛳ WrongNote에 저장 또는 시간만 업데이트
+                existing_note = session.query(WrongNote).filter(
+                    and_(
+                        WrongNote.kr_dialogue_id == kr_id,
+                        WrongNote.en_dialogue_id == en_id
+                    )
+                ).first()
+
+                if existing_note:
+                    existing_note.wrong_at = func.now()
+                else:
+                    new_note = WrongNote(
+                        kr_dialogue_id=kr_id,
+                        en_dialogue_id=en_id
+                    )
+                    session.add(new_note)
+
+                session.commit()
 
         st.markdown("---")
 

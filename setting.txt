@@ -22,6 +22,7 @@ pip install lmdb
 
 # 추가 설치
 pip install streamlit sqlalchemy pymysql # DB연동을 위함 
+pip install google-generativeai
 
 .\venv\Scripts\python.exe -m pip install selenium
 

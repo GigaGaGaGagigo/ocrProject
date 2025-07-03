@@ -5,10 +5,12 @@ from io import BytesIO
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from db.database import SessionLocal
-from db.crawl_sql import Webtoon, CutImage, Episode, Dialogue
+from db.crawl_sql import Webtoon, CutImage, Episode, Dialogue, RecentWebtoonView
 from function.ocr_easy import analyze_image , analyze_image_from_url
 from function.code_label import GENRE_MAP, GENRE_LABEL_TO_CODE
 from function.quiz_utils import quiz_page  # 퀴즈 함수 불러오기
+from function.quiz_utils_gamini import quiz_page as quiz_page_gamini # 퀴즈 함수 불러오기
+from front import sidebar
 import time
 import io
 import os
@@ -90,65 +92,6 @@ def select_webtoon():
             value=st.session_state.search_keyword
         )
 
-    # # --- 웹툰 필터링 --- (초기 버전)
-    # query = session.query(Webtoon).filter(Webtoon.language == 'kr')
-    # if selected_genre != "전체":
-    #     genre_code = list(GENRE_MAP.keys())[list(GENRE_MAP.values()).index(selected_genre)]
-    #     query = query.filter(Webtoon.genre == genre_code)
-    # if search_keyword:
-    #     query = query.filter(Webtoon.title.contains(search_keyword))
-
-    # webtoon_list = query.order_by(Webtoon.title).all()
-
-    # if search_keyword and webtoon_list:
-    #     st.subheader("🇰🇷 웹툰 목록")
-    #     selected_webtoon = st.selectbox("웹툰 선택", webtoon_list, format_func=lambda w: w.title)
-
-    #     if selected_webtoon:
-    #         st.markdown(f"### ✏️ 선택한 웹툰: {selected_webtoon.title}")
-            
-    #         ep_kr = session.query(Episode).filter_by(webtoon_id=selected_webtoon.id, lang="kr").order_by(Episode.episode_number).all()
-    #         ep_en = session.query(Episode).filter_by(webtoon_id=selected_webtoon.id, lang="en").order_by(Episode.episode_number).all()
-
-    #         kr_eps = [f"{ep.episode_number}화" for ep in ep_kr]
-    #         selected_idx = st.selectbox("🇰🇷 에피소드 선택", list(range(1, len(kr_eps)+1)), format_func=lambda i: kr_eps[i-1])
-
-    #         if selected_idx:
-    #             selected_ep_kr = ep_kr[selected_idx - 1]
-    #             selected_ep_en = ep_en[selected_idx - 1] if len(ep_en) >= selected_idx else None
-
-    #             # --- 에피소드 정보는 주석 처리 ---
-    #             # st.markdown("---")
-    #             # st.markdown(f"### 🇰🇷 한글 에피소드 정보")
-    #             # st.write(f"- 에피소드 번호: {selected_ep_kr.episode_number}")
-    #             # st.write(f"- URL: {selected_ep_kr.url}")
-    #             # st.write(f"- 이미지 경로: {selected_ep_kr.jpg_url}")
-    #             # st.write(f"- 컷 수: {selected_ep_kr.cut_size}")
-
-    #             # if selected_ep_en:
-    #             #     st.markdown(f"### 🇺🇸 영어 에피소드 정보")
-    #             #     st.write(f"- 에피소드 번호: {selected_ep_en.episode_number}")
-    #             #     st.write(f"- URL: {selected_ep_en.url}")
-    #             # else:
-    #             #     st.warning("❌ 해당 회차의 영어 버전이 존재하지 않습니다.")
-
-    #             # 🎯 퀴즈 expander 추가
-    #             if selected_ep_en:
-    #                 with st.expander("🎯 퀴즈 풀기", expanded=False):
-    #                     quiz_page(selected_ep_kr, selected_ep_en)
-
-    #                 # ▶️ 리더 모드 진입 버튼 - 퀴즈 아래에 따로 오른쪽 정렬
-    #                 _, col_btn = st.columns([6, 1])
-    #                 with col_btn:
-    #                     if st.button("📖 이 회차 보기", key="btn_reader"):
-    #                         st.session_state["view_mode"] = "reader"
-    #                         st.session_state["selected_ep_kr"] = selected_ep_kr
-    #                         st.session_state["selected_ep_en"] = selected_ep_en
-    #                         st.rerun()
-    #             else:
-    #                 st.info("❌ 영어 에피소드가 없어 퀴즈를 만들 수 없습니다.")
-    # elif search_keyword:
-    #     st.warning("❌ 해당 검색어에 맞는 웹툰이 없습니다.")
 
     # 🔍 웹툰 필터링 (개선)
     query = session.query(Webtoon).filter(Webtoon.language == 'kr') 
@@ -200,7 +143,10 @@ def select_webtoon():
                 # 🎯 퀴즈 보기
                 if selected_ep_en:
                     with st.expander("🎯 퀴즈 풀기", expanded=False):
-                        quiz_page(selected_ep_kr, selected_ep_en)
+                        try:
+                            quiz_page_gamini(selected_ep_kr, selected_ep_en)
+                        except:
+                            quiz_page(selected_ep_kr, selected_ep_en)
 
                     # ▶️ 회차 보기 버튼 (오른쪽 정렬)
                     _, col_btn = st.columns([5.7, 1.3])
@@ -236,14 +182,14 @@ def webtoon_read(ep_kr: Episode, ep_en: Episode):
             st.session_state[key] = default
 
     # 웹툰 이름 및 에피소드 정보 추가 
-    webtoon_title = session.query(Webtoon).get(ep_kr.webtoon_id).title
+    webtoon = session.query(Webtoon).get(ep_kr.webtoon_id)
     episode_number = ep_kr.episode_number
 
     # 🧭 상단 바: 뒤로가기 + 제목 표시
     col_title, col_back = st.columns([6, 1])
 
     with col_title:
-        st.subheader(f"📚 {webtoon_title} - {episode_number}화")
+        st.subheader(f"📚 {webtoon.title} - {episode_number}화")
 
     with col_back:
         if st.button("🔎 웹툰검색", key="back_btn"):
@@ -389,6 +335,9 @@ def webtoon_read(ep_kr: Episode, ep_en: Episode):
     ci_kr = kr_cut if kr_cut else new_kr_cut
     ci_en = en_cut if en_cut else new_en_cut
 
+    # 최근본 웹툰 기록
+    update_recent_view(session, webtoon.id, ep_kr.id, ci_kr.cut_number)
+
     half_height = ci_kr.height_px - 1000
     half_height = int(half_height / 2)
 
@@ -409,7 +358,34 @@ def webtoon_read(ep_kr: Episode, ep_en: Episode):
     else:
         st.warning("❗컷 이미지 정보를 찾을 수 없어 대사 분석을 생략합니다.")
     session.close()
-    
+
+
+def update_recent_view(session, webtoon_id: int, episode_id: int, cut_index: int):
+    user_id = "default"
+
+    # 기존 기록이 있는지 확인
+    existing = session.query(RecentWebtoonView).filter_by(
+        user_id=user_id,
+        webtoon_id=webtoon_id
+    ).first()
+
+    if existing:
+        # 최신 컷 번호 갱신
+        existing.episode_id = episode_id
+        existing.last_cut_number = cut_index
+        # view_at은 onupdate 자동 갱신
+    else:
+        # 새로운 기록 삽입
+        new_view = RecentWebtoonView(
+            user_id=user_id,
+            webtoon_id=webtoon_id,
+            episode_id=episode_id,
+            last_cut_number=cut_index
+        )
+        session.add(new_view)
+
+    session.commit()
+
 
 def webtoon_dialogue(ci_kr: CutImage, ci_en: CutImage, ocr_check):
     session = SessionLocal()

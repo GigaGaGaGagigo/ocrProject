@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Text
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
+from sqlalchemy.sql import func
 from db.database import Base
 
 class Webtoon(Base):
@@ -47,3 +48,22 @@ class Dialogue(Base):
     sequence = Column(Integer)
     speaker_id = Column(Integer)
     matched_dialogue_id = Column(Integer)
+
+
+class WrongNote(Base):
+    __tablename__ = 'wrong_note'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    kr_dialogue_id = Column(Integer, ForeignKey('dialogue.id'), nullable=False)
+    en_dialogue_id = Column(Integer, ForeignKey('dialogue.id'), nullable=False)
+    wrong_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class RecentWebtoonView(Base):
+    __tablename__ = 'recent_webtoon_view'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(String(255), nullable=False)
+    webtoon_id = Column(Integer, ForeignKey('webtoon.id'), nullable=False)
+    episode_id = Column(Integer, ForeignKey('episode.id'), nullable=False)
+    last_cut_number = Column(Integer, nullable=False)
+    view_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

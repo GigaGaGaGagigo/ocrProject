@@ -1,6 +1,24 @@
 import streamlit as st
+from db.database import SessionLocal
+from db.crawl_sql import WrongNote, Dialogue, RecentWebtoonView, Webtoon, Episode, CutImage
+from front import use_home
 
 def show():
+    
+    # 세션 상태 기본값 설정
+    if "search_keyword" not in st.session_state:
+        st.session_state.search_keyword = ""
+    if "selected_genre" not in st.session_state:
+        st.session_state.selected_genre = "전체"
+    if "selected_webtoon_id" not in st.session_state:
+        st.session_state.selected_webtoon_id = None
+
+    # ✅ 리더 모드 진입 시
+    if st.session_state.get("view_mode") == "reader":
+        selected_ep_kr = st.session_state["selected_ep_kr"]
+        selected_ep_en = st.session_state.get("selected_ep_en")
+        use_home.webtoon_read(selected_ep_kr, selected_ep_en)
+        return
     
     st.header("🏠 마이페이지")
     st.markdown("웹툰 기반 외국어 학습 플랫폼에 오신 걸 환영합니다 😊")
@@ -24,11 +42,77 @@ def show():
 
         with col22:
             with st.expander("📘 오답노트", expanded=True):
-                st.write("1. **resolve** - 해결하다")
-                st.write("2. **defeat** - 패배시키다")
-                st.write("3. **clan** - 부족, 문파")
-                if st.button("📤 단어장 내보내기"):
-                    st.success("✅ 단어장이 다운로드되었습니다 (예시)")
+                session = SessionLocal()
+
+                # 최신 5개 오답 불러오기
+                wrong_notes = (
+                    session.query(WrongNote)
+                    .order_by(WrongNote.wrong_at.desc())
+                    .limit(5)
+                    .all()
+                )
+
+                if wrong_notes:
+                    for i, note in enumerate(wrong_notes, start=1):
+                        kr_d = session.query(Dialogue).filter_by(id=note.kr_dialogue_id).first()
+                        en_d = session.query(Dialogue).filter_by(id=note.en_dialogue_id).first()
+
+                        if kr_d and en_d:
+                            # 버튼 클릭 감지용 key 생성
+                            button_key = f"wrong_note_{i}"
+
+                            # 버튼과 텍스트를 한 줄로 구성
+                            cols = st.columns([1, 12])
+                        with cols[0]:
+                            if st.button(f"{i}", key=f"wrong_note_btn_{i}"):
+                                st.session_state["view_mode"] = "reader"
+                            
+                                image_kr = session.query(CutImage).filter_by(
+                                    id=kr_d.cut_image_id,
+                                ).first()
+
+                                st.session_state["cut_index"] = image_kr.cut_number
+
+                                ep_kr = session.query(Episode).filter_by(
+                                    id=image_kr.episode_id,
+                                ).first()
+
+                                st.session_state["selected_ep_kr"] = ep_kr
+
+                                image_en = session.query(CutImage).filter_by(
+                                    id=en_d.cut_image_id,
+                                ).first()
+
+                        
+                                ep_en = session.query(Episode).filter_by(
+                                    id=image_en.episode_id,
+                                ).first()
+
+                                st.session_state["selected_ep_en"] = ep_en
+
+                                st.session_state["reader_rendered"] = False
+                                st.rerun()
+
+                            # 버튼 스타일을 텍스트처럼 보이게 하기 위해 CSS 삽입
+                            st.markdown("""
+                                <style>
+                                div[data-testid="stButton"] button {
+                                    padding: 5px;
+                                    font-size: 14px;
+                                    color: black;
+                                    border: none;
+                                    box-shadow: none;
+                                    cursor: pointer;
+                                }
+                                </style>
+                            """, unsafe_allow_html=True)
+
+                        with cols[1]:
+                            st.write(f"**{en_d.content}** - {kr_d.content}")
+                else:
+                    st.info("✅ 최근 오답이 없습니다.")
+
+        session.close()
 
         #col12, col4 = st.columns(2)
 
@@ -60,9 +144,46 @@ def show():
 
         with col6:
             with st.expander("📅 최근 본 웹툰"):
-                st.write("🖼️ 최근 본 웹툰: **화산귀환**")
-                st.write("📍 마지막 컷: 12번")
-                st.progress(60, text="학습 진행률")
+                session = SessionLocal()
+                recent = session.query(RecentWebtoonView)\
+                    .filter_by(user_id="default")\
+                    .order_by(RecentWebtoonView.view_at.desc())\
+                    .first()
+
+                if recent:
+                    webtoon = session.query(Webtoon).get(recent.webtoon_id)
+                    episode = session.query(Episode).get(recent.episode_id)
+
+                    # 컷 수 가져오기
+                    ep_total_cut = episode.cut_size if episode.cut_size else 20
+                    progress = min(int((recent.last_cut_number / ep_total_cut) * 100), 100)
+
+                    st.write(f"🖼️ 최근 본 웹툰: **{webtoon.title} - {episode.episode_number}화**")
+                    st.write(f"🎬 마지막 컷: {recent.last_cut_number}번")
+                    st.progress(progress, text="학습 진행률")
+
+                    # 👉 클릭하면 바로 이어보기
+                    if st.button("📖 이어서 보기"):
+
+
+                        st.session_state["view_mode"] = "reader"
+                        st.session_state["selected_ep_kr"] = episode
+                        st.session_state["cut_index"] = recent.last_cut_number
+
+                        # 영어 회차도 함께 불러오기
+                        ep_en = session.query(Episode).filter_by(
+                            webtoon_id=webtoon.id,
+                            lang="en",
+                            episode_number=episode.episode_number
+                        ).first()
+                        st.session_state["selected_ep_en"] = ep_en
+
+                        # ✅ 플래그 초기화하고 rerun 호출
+                        st.session_state["reader_rendered"] = False
+                        st.rerun()
+                else:
+                    st.write("최근 본 웹툰이 없습니다.")
+                session.close()
 
     # ▶️ 탭3: 제안 및 피드백
     with tab3:

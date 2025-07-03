@@ -80,3 +80,26 @@ ocrProject/
 | `function/quiz_utils.py` | 퀴즈 문제 생성 |
 
 
+## 5. 프로젝트 설치 및 실행
+
+1. `setting.txt` 파일 내 명시된 패키지를 모두 설치합니다.  
+   (예: `pip install -r setting.txt`)
+
+2. `sql/create_sql.txt`에 있는 `CREATE` 구문을 로컬 MySQL DB에 실행하여 스키마를 생성합니다.
+
+3. 프로젝트 루트에 `db_password.env` 파일을 작성하고, 아래 형식에 맞춰 DB 정보를 입력합니다:
+
+    ```
+    DB_USER=your_username
+    DB_PASSWORD=your_password
+    DB_HOST=localhost
+    DB_PORT=3306
+    DB_NAME=your_database
+    GEMINI_API_KEY=gemini_api_key
+    ```
+
+4. 터미널에서 Streamlit 앱을 실행합니다:
+
+    ```
+    streamlit run main.py
+    ```

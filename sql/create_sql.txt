@@ -67,11 +67,22 @@ CREATE TABLE speaker (
     name VARCHAR(255) NOT NULL   -- 등장인물 이름
 );
 
+-- 추가 table
+
 CREATE TABLE wrong_note (
     id INT AUTO_INCREMENT PRIMARY KEY,
     kr_dialogue_id INT NOT NULL,           -- 한글 대사 Dialogue.id
     en_dialogue_id INT NOT NULL,           -- 영어 대사 Dialogue.id
     wrong_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE recent_webtoon_view (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL,             -- 로그인 기능이 없다면 고정된 사용자명 사용 (예: "default")
+    webtoon_id INT NOT NULL,                   -- 최근 본 웹툰 ID
+    episode_id INT NOT NULL,                   -- 최근 본 에피소드 ID
+    last_cut_number INT NOT NULL,              -- 마지막으로 본 컷 번호
+    view_at DATETIME DEFAULT CURRENT_TIMESTAMP -- 최근 열람 시간
 );
 
 -- INSERT INTO webtoon_group (group_name)
