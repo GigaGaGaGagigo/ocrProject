@@ -38,3 +38,32 @@ streamlit run ui_test2.py
 streamlit run main.py
 streamlit run db_test.py
 streamlit run test/ui/test_easyocr_page.py
+
+# gemini 설정
+
+pip install google-generativeai
+
+pip install --upgrade google-generativeai
+(잘 안되면)
+
+pip uninstall torch torchvision torchaudio 
+(그래도 잘 안되면토치와 버전이 맞지 않았을 때 그런 경우가 있다고 해서 전부 지워버린 후 완전히 호환되는 버전으로 재설치.)
+
+------------------------------------------------------------
+
+pip install torch==2.5.1+cu121 torchvision==0.20.1+cu121 torchaudio==2.5.1+cu121 --extra-index-url https://download.pytorch.org/whl/cu121 문제가 있을시
+(쿠다 12.1)
+
+pip install torch==2.5.1+cpu torchvision==0.20.1+cpu torchaudio==2.5.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
+#(cpu만)
+
+-------------------------------------------------------------
+
+알맞게 설치 됐는지 확인
+import torch
+import torchvision
+import torchaudio
+
+print(torch.__version__)
+print(torchvision.__version__)
+print(torchaudio.__version__)

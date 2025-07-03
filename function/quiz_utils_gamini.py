@@ -5,14 +5,10 @@ from db.crawl_sql import Dialogue, Episode, CutImage, WrongNote
 from sqlalchemy import and_, func
 from dotenv import load_dotenv
 import os
-
 import google.generativeai as genai
 
 load_dotenv(dotenv_path="db_password.env")
-
-# 환경변수에서 api키 정보 읽기
-GEMINI_API_KEY = os.getenv("DB_USER")
-
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=GEMINI_API_KEY)  # 본인 Gemini API 키
 
 def extract_text_from_image_with_gemini(img_path):
@@ -52,10 +48,6 @@ def correct_ocr_with_gemini(gemini_text, ocr_text, lang="en"):
         return gemini_text.strip()
 
 def make_gemini_choices(kr_text, en_text):
-    """
-    Gemini API로 '정답과 유사한 오답 3개' 포함 4지선다 객관식 보기 생성 (정답 인덱스 반환)
-    Gemini의 원본 응답도 반환하여 디버깅/튜닝 가능.
-    """
     prompt = f"""
 [중요] 아래 조건을 반드시 지켜서 4지선다형 보기를 만들어줘:
 
@@ -92,9 +84,19 @@ def make_gemini_choices(kr_text, en_text):
         answer_idx = 1
         if ans_line:
             answer_idx = int(''.join(filter(str.isdigit, ans_line[0])))
-        return options, answer_idx-1, out   # 원본 응답도 같이 반환
+        return options, answer_idx-1, out
     except Exception:
         return None, None, ""
+
+def shuffle_options(options, answer_idx):
+    """
+    보기를 항상 무작위로 섞고, 섞인 뒤의 정답 인덱스를 반환
+    """
+    zipped = list(zip(options, range(4)))
+    random.shuffle(zipped)
+    shuffled_options, orig_indices = zip(*zipped)
+    new_answer_idx = orig_indices.index(answer_idx)
+    return list(shuffled_options), new_answer_idx
 
 def quiz_page(ep_kr: Episode, ep_en: Episode, max_questions=5):
     st.header("🔠 영어 대사 퀴즈 (AI 오답 자동 생성)")
@@ -128,33 +130,47 @@ def quiz_page(ep_kr: Episode, ep_en: Episode, max_questions=5):
         session.close()
         return
 
-    # 항상 문제 뽑을 때 현재 길이에 맞춰서 랜덤 인덱스 새로 뽑기
-    if st.button("🔄 문제 새로 뽑기 (새로운 랜덤 퀴즈 세트)", key="reset_quiz") or \
-        "quiz_indices" not in st.session_state or len(st.session_state.get("quiz_indices", [])) != n_quiz:
+    need_reset = (
+        "quiz_indices" not in st.session_state or
+        "quiz_options" not in st.session_state or
+        "quiz_answer_indices" not in st.session_state or
+        "quiz_raws" not in st.session_state or
+        st.button("🔄 문제 새로 뽑기 (새로운 랜덤 퀴즈 세트)", key="reset_quiz") or
+        len(st.session_state.get("quiz_indices", [])) != n_quiz
+    )
+
+    if need_reset:
         st.session_state["quiz_indices"] = sorted(random.sample(range(len(quiz_pairs)), n_quiz))
+        st.session_state["quiz_options"] = []
+        st.session_state["quiz_answer_indices"] = []
+        st.session_state["quiz_raws"] = []
+        for idx in st.session_state["quiz_indices"]:
+            kr_text, en_text, kr_id, en_id = quiz_pairs[idx]
+            options, answer_idx, gemini_raw = make_gemini_choices(kr_text, en_text)
+            # fallback 처리
+            if not options or len(options) != 4 or answer_idx not in range(4):
+                other_choices = [e for (_, e, _, _) in quiz_pairs if e != en_text]
+                wrong_choices = random.sample(other_choices, min(3, len(other_choices)))
+                options = wrong_choices + [en_text]
+                answer_idx = len(options) - 1  # en_text가 정답(맨 마지막)
+            # ★ 반드시 보기와 정답 인덱스 섞기!
+            options, answer_idx = shuffle_options(options, answer_idx)
+            st.session_state["quiz_options"].append(options)
+            st.session_state["quiz_answer_indices"].append(answer_idx)
+            st.session_state["quiz_raws"].append(gemini_raw)
+        # 정답 체크/입력 초기화
         for i in range(1, n_quiz + 1):
             st.session_state.pop(f"checked_{i}", None)
             st.session_state.pop(f"user_answer_{i}", None)
 
-    indices = st.session_state.get("quiz_indices", [])
+    indices = st.session_state["quiz_indices"]
     gemini_raw_list = []
-
     for i, idx in enumerate(indices, start=1):
-        if idx >= len(quiz_pairs):
-            continue
         kr_text, en_text, kr_id, en_id = quiz_pairs[idx]
-
-        # Gemini 오답 생성 (원본 응답까지)
-        options, answer_idx, gemini_raw = make_gemini_choices(kr_text, en_text)
+        options = st.session_state["quiz_options"][i-1]
+        answer_idx = st.session_state["quiz_answer_indices"][i-1]
+        gemini_raw = st.session_state["quiz_raws"][i-1]
         gemini_raw_list.append(f"문제 {i}:\n{gemini_raw}")
-
-        # fallback: Gemini 호출 실패 시 DB에서 랜덤 보기
-        if not options or len(options) != 4 or answer_idx not in range(4):
-            other_choices = [e for (_, e) in quiz_pairs if e != en_text]
-            wrong_choices = random.sample(other_choices, min(3, len(other_choices)))
-            options = wrong_choices + [en_text]
-            random.shuffle(options)
-            answer_idx = options.index(en_text)
 
         st.markdown(f"#### 𝗤 문제 {i}")
         st.markdown(f"**한글 대사:** {kr_text}")
@@ -162,10 +178,10 @@ def quiz_page(ep_kr: Episode, ep_en: Episode, max_questions=5):
         user_answer = st.radio(
             "영어 번역을 고르세요:",
             options,
-            key=f"q_{i}"
+            key=f"q_{i}_{idx}"
         )
 
-        if st.button(f"✅ 정답 확인 {i}", key=f"check_{i}"):
+        if st.button(f"✅ 정답 확인 {i}", key=f"check_{i}_{idx}"):
             st.session_state[f"checked_{i}"] = True
             st.session_state[f"user_answer_{i}"] = user_answer
 
@@ -175,7 +191,6 @@ def quiz_page(ep_kr: Episode, ep_en: Episode, max_questions=5):
                 st.success("🎉 정답입니다!")
             else:
                 st.error(f"❌ 틀렸습니다. 정답은: {options[answer_idx]}")
-
                 # ⛳ WrongNote에 저장 또는 시간만 업데이트
                 existing_note = session.query(WrongNote).filter(
                     and_(
@@ -183,7 +198,6 @@ def quiz_page(ep_kr: Episode, ep_en: Episode, max_questions=5):
                         WrongNote.en_dialogue_id == en_id
                     )
                 ).first()
-
                 if existing_note:
                     existing_note.wrong_at = func.now()
                 else:
@@ -192,15 +206,12 @@ def quiz_page(ep_kr: Episode, ep_en: Episode, max_questions=5):
                         en_dialogue_id=en_id
                     )
                     session.add(new_note)
-
                 session.commit()
-
         st.markdown("---")
 
     # Gemini 응답 전체 코드블록 출력 (expander X, 튜닝 참고)
     if len(gemini_raw_list) > 0:
         st.markdown("#### Gemini 원본 응답 (튜닝 참고)")
         st.code('\n\n'.join(gemini_raw_list), language='text')
-
 
     session.close()
